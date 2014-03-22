@@ -1,0 +1,11 @@
+#+TITLE: Installing some packages
+
+* Just install some packages for example
+
+#+begin_src sh
+sudo apt-get install build-essentials
+#+end_src
+
+Should be able to be run with something like:
+
+: org-converge examples/apt-get-install.org

@@ -1,0 +1,14 @@
+#+TITLE: Using macros for configuration
+
+#+macro: hello world
+#+macro: application my-application
+
+Hello {{{hello}}}, this will setup something for {{{application}}}.
+
+#+begin_src sh :results output
+echo "Hello for {{{application}}}"
+#+end_src
+
+#+RESULTS:
+: Hello for {{{application}}}
+

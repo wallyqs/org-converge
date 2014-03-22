@@ -1,0 +1,50 @@
+# -*- mode: org; auto-fill-mode -*-
+#+TITLE:	Setting up Fluentd
+#+startup:	showeverything 
+
+* Introduction
+
+The following will setup and configure ~fluentd~ on a node.
+
+* Settings
+
+These can be defined with Org mode macro directives, but thinking on
+other ways to do it as well.
+
+#+macro: fluentd_port     4224
+#+macro: fluentd_filepath here.log
+
+* Setup 							      :setup:
+
+Fluentd can be installed either as a package from treasure data or
+just as a gem. In this example, we only install as a gem:
+
+#+begin_src sh
+gem install fluentd
+#+end_src
+
+* Configuration 						     :config:
+
+Set Fluentd to listen on the ~fluentd_port~ port and to write logs
+to ~fluentd_filepath~.
+
+#+begin_src conf :tangle etc/fluentd.conf
+<source>
+  type forward
+  port {{{ fluentd_port }}}
+</source>
+
+<match **>
+  type file
+  path {{{ fluentd_filepath }}}
+</match>
+#+end_src
+
+# A script to daemonize the process could be written here, as well as
+# any /etc/default/* required settings...
+
+* Start which was configured here 				      :start:
+
+#+begin_src sh
+fluentd -c etc/fluentd.conf -vvv
+#+end_src

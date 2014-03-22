@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# -*- mode: ruby -*-
+require 'docopt'
+require 'org-converge'
+
+doc = <<OPTIONS
+
+org-converge: A light configuration management tool for Org mode
+
+Usage:
+  org-converge <org_file> [--tags=<tags>] [--dry-run=<dry_run>]
+
+Options:
+
+  -h --help               Show this screen.
+
+OPTIONS
+
+begin
+  require "pp"
+  cmd = Docopt::docopt(doc)
+rescue Docopt::Exit => e
+  puts e.message
+end
+
+exit 1 unless cmd
+
+o = OrgConverge::Command.new(cmd)
+o.execute!
