@@ -8,7 +8,7 @@ doc = <<OPTIONS
 org-converge: A light configuration management tool for Org mode
 
 Usage:
-  org-converge <org_file> [--dry-run] [--showfiles]
+  org-converge <org_file> [--dry-run] [--showfiles] [--log=<logfile>]
 
 Options:
 

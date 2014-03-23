@@ -1,5 +1,3 @@
-require 'org-ruby'
-
 module Orgmode
   class BabelOutputBuffer < OutputBuffer
     attr_reader :tangle

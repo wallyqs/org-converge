@@ -1,9 +1,11 @@
 source 'https://rubygems.org'
 
-group :development do 
-  gem 'org-ruby', :path => 'org-ruby'
-  gem 'docopt'
+gem 'org-ruby', '~> 0.9.2'
+gem 'docopt'
+
+group :development, :test do 
   gem 'rake'
+  gem 'rspec'
 end
 
 gemspec
