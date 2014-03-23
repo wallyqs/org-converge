@@ -5,6 +5,7 @@ Gem::Specification.new do |gem|
   gem.authors       = ["Waldemar Quevedo"]
   gem.email         = ["waldemar.quevedo@gmail.com"]
   gem.description   = %q{A light configuration management tool for Org mode}
+  gem.summary       = %q{Provides an 'org-converge' command which can be used for tangling and running Org mode code blocks}
   gem.homepage      = "https://github.com/wallyqs/org-converge"
 
   gem.files         = `git ls-files`.split($\)
