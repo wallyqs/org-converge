@@ -8,18 +8,24 @@ module OrgConverge
       @options = options
       @dotorg  = options['<org_file>']
       @logger  = Logger.new(options['--log'] || STDOUT)
+      @root_dir = options['--root-dir']
       @ob = Orgmode::Parser.new(File.read(dotorg)).babelize
     end
 
     def execute!
       case
       when @options['--showfiles']
+
         showfiles
       when @options['--tangle']
         tangle!
       else
         converge!
       end
+
+      true
+    rescue => e
+      false
     end
 
     def converge!
@@ -28,7 +34,7 @@ module OrgConverge
 
     def tangle!
       begin
-        babel = Orgmode::Babel.new(ob, { :logger => logger })
+        babel = Orgmode::Babel.new(ob, { :logger => logger, :root_dir => @root_dir })
         results = babel.tangle!
       rescue Orgmode::Babel::TangleError
         logger.error "Cannot converge because there were errors during tangle step".red
