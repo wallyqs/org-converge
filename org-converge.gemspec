@@ -13,4 +13,6 @@ Gem::Specification.new do |gem|
   gem.name          = "org-converge"
   gem.require_paths = ["lib"]
   gem.version       = OrgConverge::VERSION
+  gem.add_runtime_dependency('docopt', '0.5.0')
+  gem.add_runtime_dependency('org-ruby', '~> 0.9.2')
 end
