@@ -1,0 +1,160 @@
+# -*- mode: org; mode: auto-fill; -*-
+#+TODO:    TODO | DONE CANCELED 
+#+startup: showeverything
+
+* [1/4] 0.0.1 version
+
+Need some basic functionality of what Org babel offers first.
+
+- [X] Display files that were captured with command
+  : org-converge setupfile.org --showfiles
+- [ ] ~:tangle~ puts the files in the correct path
+- [ ] Code blocks are executed by default after tangling
+  Only when :shebang exists as an argument
+- [ ] Display how the run would look like
+  : org-converge setupfile.org --dry-run
+
+* [0/2] 0.0.2 version
+
+- [ ] Macros can be loaded and applied to the configuration
+- [ ] Actually support converging and idempotency
+  + Do not do an operation unless it is required
+  + Abort in case there was a failure in executing the script.
+
+* [2/13] Ideas
+** CANCELED We don't need to create the directories in most cases
+
+Something like this is not required because the ~:tangle~ blocks
+would create the necessary directories behind the scenes.
+
+#+begin_src org
+  ,We need to prepare some directories for the configuration:
+  
+  ,#+begin_src converge
+  ,mkdir -p etc/fluentd/config
+  ,#+end_src
+#+end_src
+
+** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
+
+By default, this would be 0644, but we also need to specify the
+user:group of it so the syntax would have to be:
+
+#+begin_src conf :tangle etc/something/config/path :chmod 0664 :user td-agent :group
+hmm dont't like this syntax for folders
+#+end_src
+
+Let's keep it simple and just use a babel block that shells out to create the directories
+until I can think of something better.
+
+** TODO By default, it should use current dir for tangling
+** TODO Converging: Only do an operation when it didn't finish
+
+Hence the name of the project
+
+** TODO For now we keep the indentation of the code blocks
+
+The indentatin of the ~#+begin_src~ should always 
+be at the beginning of the file, not at the indentation
+level from when the file was written in Org mode.
+
+** TODO We should have a whitelist of languages that can be executed and ignore everything
+
+Under which heuristics or configuration should we decide which will be the 
+binary that should be used to execute the block? Specify with shebang?
+
+- For now, unless shebang is specified it will be executed.
+  Then in the scripts buffer used ~index::shebang~ as a key.
+
+** TODO Setting permissions from a tangled file
+
+It should be possible to tangle the files this way:
+
+#+begin_src conf :tangle etc/something/config/path :chmod 0664 :user td-agent :group td-agent
+<source>
+</source>
+#+end_src
+
+** TODO Adopting the ~#+SETUPFILE~ for loading a config that is done JSON or YAML
+
+It seems that there is support for a ~#+SETUPFILE~
+
+** TODO Something more flexible than macros:
+
+One example of syntax that we could use instead of macros:
+
+#+begin_src yaml :session
+fluentd:
+  port: 4224
+  path: here.log
+#+end_src
+
+But need to 
+
+** TODO Using the :tags: to setup the things to run right away
+
+Kind of like the chef-solo runlist, a headline like this...
+
+#+begin_src org
+  ,* Everything in its right place                                      :config:
+  
+  ,#+begin_src conf :tangle etc/this.yml
+  ,hello: "world"
+  ,#+end_src
+#+end_src
+
+...could be called like this
+
+#+begin_src sh
+org-converge fluentd.org -t config
+#+end_src
+
+** TODO Managing dependencies: could be handled with ~#+include~ directives
+
+One idea is that it would be useful to compile different manuals
+that are dependent among each other. 
+
+For example, the centralized logs server would require fluentd.
+We should be able to express that dependency somehow:
+
+#+begin_src org :tangle logserver.org
+  ,#+include: "fluentd.org"
+  
+  ,* Setup the centralized logserver                                     :setup:
+  
+  ,Once the fluentd.org has been converged, we can build upon this and
+  ,override the original config to make it particular for this logserver
+#+end_src
+
+# But one problem, is that once I have included something, sometimes we
+# will want "reopen" the previous manuals?
+
+** TODO Loading all the Org mode files first and then setup only one part
+
+So maybe, each one of these tags would have to be namespaces under the
+name of the file:
+
+: org-converge logserver.org -t "fluentd::setup, fluentd::config, logserver::setup"
+
+** TODO Choosing a templating language: default for now is mustache
+
+We could implement the macro systems, but it seems that it may not be
+strong enough for providing with all the cases we may run into.
+
+** TODO Chaining resources with ~#+NAME:~ directives and ~:notify~ argument
+
+One idea is to be able to notify resources by naming the code blocks.
+
+Example: Here first the td-agent service would try to start,
+and if it succeeds, then it would execute the script defined in the
+~announce-availability~ resource.
+
+#+name: td-agent-start
+#+begin_src sh :notify announce-availability
+sudo service td-agent start
+#+end_src
+
+#+name: announce-availability
+#+begin_src sh
+sudo /etc/register-to-balancer
+#+end_src

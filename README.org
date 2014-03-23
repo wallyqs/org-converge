@@ -35,8 +35,8 @@
     ,#+MACRO: status_port true
     
     ,#+begin_src yaml :tangle /etc/component.yml
-    ,multitenant: false
-    ,status_port: 10004
+    multitenant: false
+    status_port: 10004
     ,#+end_src
   #+end_src
 
@@ -64,28 +64,28 @@
     ,#+macro: multitenancy_enabled true
     ,#+macro: status_port  true
     ,#+macro: project_path path/to/project
-    
+
     ,* Configuring the component
-    
+
     ,#+begin_src yaml :tangle /etc/component.yml
-    ,multitenant: false
-    ,status_port: 10004
+    multitenant: false
+    status_port: 10004
     ,#+end_src  
-    
+
     ,* Installing the dependencies
-    
-    ,Need the following so that ~bundle install~ can compile 
-    ,the native extensions correctly.
-    
+
+    Need the following so that ~bundle install~ can compile 
+    the native extensions correctly.
+
     ,#+begin_src sh
-    ,apt-get install build-essentials -y
+    apt-get install build-essentials -y
     ,#+end_src
-    
-    ,Then the following should work:
-    
+
+    Then the following should work:
+
     ,#+begin_src sh
-    ,cd {{{project_path}}}
-    ,bundle install
+    cd {{{project_path}}}
+    bundle install
     ,#+end_src
   #+end_src
 

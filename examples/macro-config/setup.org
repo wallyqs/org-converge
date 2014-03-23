@@ -6,7 +6,7 @@
 Hello {{{hello}}}, this will setup something for {{{application}}}.
 
 #+begin_src sh :results output
-echo "Hello for {{{application}}}"
+echo "Hello for {{{application}}}" > /tmp/hello
 #+end_src
 
 #+RESULTS:
