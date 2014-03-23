@@ -16,9 +16,25 @@ a server for example is something that could be also be done using
 the same syntax, given that *converging* the configuration is something
 that one ought to be able to reproduce.
 
-# Usage
+# Example usage
 
-    org-converge path/to/setup-file.org
+	org-converge spec/converge_examples/basic_tangle/setup.org --showfiles 
+	
+	---------- conf.yml --------------
+	bind: 0.0.0.0
+	port: 2442
+
+	mysql:
+	 db: users
+     host: somewhere-example.local
+	 password: 111111111
+	 
+	org-converge spec/converge_examples/basic_tangle/setup.org --tangle
+	
+	I, [2014-03-24T00:21:08.073506 #660]  INFO -- : Tangling 1 files...
+    I, [2014-03-24T00:21:08.073668 #660]  INFO -- : BEGIN(conf.yml): Tangling 7 lines at 'conf.yml'
+    I, [2014-03-24T00:21:08.075562 #660]  INFO -- : END(conf.yml): done.
+    I, [2014-03-24T00:21:08.075638 #660]  INFO -- : Tangling succeeded!
 
 # How it works
 
