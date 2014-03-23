@@ -18,7 +18,7 @@ that one ought to be able to reproduce.
 
 # Usage
 
-org-converge path/to/setup-file.org
+    org-converge path/to/setup-file.org
 
 # How it works
 
