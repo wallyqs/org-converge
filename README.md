@@ -1,12 +1,18 @@
 Org Converge
------------------
+------------
+[![Build Status](https://travis-ci.org/wallyqs/org-converge.svg?branch=master)](https://travis-ci.org/wallyqs/org-converge)
 
 # Description
 
-This attempts to be an experiment of using Org mode syntax to
-describe, configure and setting up something, borrowing some ideas
-of what is possible to do with tools like `chef-solo`, `puppet`,
-`ansible`, etc...
+A tool which uses Org mode syntax to describe, configure and
+setup something, borrowing some ideas of what is possible to 
+do with tools like `chef-solo`, `puppet`, `ansible`, etc...
+
+Can also be used for tangling code blocks like Org Babel does.
+
+# Installing
+
+    $ gem install org-converge
 
 # Motivation
 
@@ -18,7 +24,7 @@ that one ought to be able to reproduce.
 
 # Example usage
 
-	org-converge spec/converge_examples/basic_tangle/setup.org --showfiles 
+	$ org-converge spec/converge_examples/basic_tangle/setup.org --showfiles 
 	
 	---------- conf.yml --------------
 	bind: 0.0.0.0
@@ -29,7 +35,7 @@ that one ought to be able to reproduce.
      host: somewhere-example.local
 	 password: 111111111
 	 
-	org-converge spec/converge_examples/basic_tangle/setup.org --tangle
+	$ org-converge spec/converge_examples/basic_tangle/setup.org --tangle
 	
 	I, [2014-03-24T00:21:08.073506 #660]  INFO -- : Tangling 1 files...
     I, [2014-03-24T00:21:08.073668 #660]  INFO -- : BEGIN(conf.yml): Tangling 7 lines at 'conf.yml'
@@ -59,14 +65,14 @@ And then configure it by running it as follows, (considering we have
 the correct permissions):
 
 ```sh
-  org-converge server.org
+  $ org-converge server.org
 ```
 
 This leverages on the syntax already provided by Org Babel, but one
 difference here is that if we run it once again without changes...
 
 ```sh
-  org-converge server.org
+  $ org-converge server.org
 ```
 
 ...it would finish soon since the configuration has already converged.
@@ -120,5 +126,5 @@ long as dogfooding from this goes well.
 # Contributing
 
 The project is in very early development at this moment, but if you
-feel that it is interesting enough, please create a ticket so start
+feel that it is interesting enough, please create a ticket to start
 the discussion.
