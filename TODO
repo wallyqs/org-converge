@@ -2,14 +2,12 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [3/3] 0.0.1 version
+* [0/2] 0.0.3 version
 
-Need some basic functionality of what Org babel offers first.
-
-- [X] Display files that were captured with command
-  : org-converge setupfile.org --showfiles
-- [X] ~:tangle~ puts the files in the correct path
-- [X] ~--tangle~ flag
+- [ ] Macros can be loaded and applied to the configuration
+- [ ] Actually support converging and idempotency
+  + Do not do an operation unless it is required
+  + Abort in case there was a failure in executing the script.
 
 * [0/2] 0.0.2 version
 
@@ -20,14 +18,17 @@ Run the code blocks!
 - [ ] Display how the run would look like
   : org-converge setupfile.org --dry-run
 
-* [0/2] 0.0.3 version
+* [3/3] 0.0.1 version
 
-- [ ] Macros can be loaded and applied to the configuration
-- [ ] Actually support converging and idempotency
-  + Do not do an operation unless it is required
-  + Abort in case there was a failure in executing the script.
+Need some basic functionality of what Org babel offers first.
 
-* [2/13] Ideas
+- [X] Display files that were captured with command
+  : org-converge setupfile.org --showfiles
+- [X] ~:tangle~ puts the files in the correct path
+- [X] ~--tangle~ flag
+- [X] Support a root dir for when not running relative to the directory
+
+* [2/14] Ideas
 ** CANCELED We don't need to create the directories in most cases
 
 Something like this is not required because the ~:tangle~ blocks
