@@ -2,25 +2,31 @@ module OrgConverge
   class Command
     attr_reader :dotorg
     attr_reader :logger
+    attr_reader :ob
 
     def initialize(options)
       @options = options
       @dotorg  = options['<org_file>']
       @logger  = Logger.new(options['--log'] || STDOUT)
+      @ob = Orgmode::Parser.new(File.read(dotorg)).babelize
     end
 
     def execute!
       case
       when @options['--showfiles']
         showfiles
+      when @options['--tangle']
+        tangle!
+      else
+        converge!
       end
-
-      converge!
     end
 
     def converge!
-      ob = Orgmode::Parser.new(File.read(dotorg)).babelize
+      tangle!
+    end
 
+    def tangle!
       begin
         babel = Orgmode::Babel.new(ob, { :logger => logger })
         results = babel.tangle!
@@ -30,8 +36,6 @@ module OrgConverge
     end
 
     def showfiles
-      ob = Orgmode::Parser.new(File.read(dotorg)).babelize
-
       ob.tangle.each do |file, lines|
         puts "---------- #{file} --------------".green
         lines.each do |line|

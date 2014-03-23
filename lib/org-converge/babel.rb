@@ -15,20 +15,25 @@ module Orgmode
       @logger  = options[:logger] || Logger.new(STDOUT)
     end
 
+    # TODO: should be able to tangle relatively to a dir
     def tangle!
       logger.info "Tangling #{ob.tangle.keys.count} files..."
 
       ob.tangle.each do |file, lines|
-        logger.info "Begin to tangle #{file} (lines: #{lines.count})"
-        # should abort when the directory does not exists
-        # should abort when the directory failed because of permissions
+        logger.info "BEGIN(#{file}): Tangling #{lines.count} lines."
+        # TODO: should abort when the directory does not exists
+        # TODO: should abort when the directory failed because of permissions
         if not Dir.exists?(File.dirname(file))
           logger.error "Could not tangle #{file} because directory does not exists!"
           raise TangleError
         end
 
+        if File.exists?(file)
+          logger.warn "File already exists at #{file}, it will be overwritten"
+        end
+
         begin
-          File.open(file, 'a') do |f|
+          File.open(file, 'w') do |f|
             lines.each do |line|
               f.puts line
             end
@@ -37,6 +42,7 @@ module Orgmode
           logger.error "Problem while writing to '#{file}': #{e}"
           raise TangleError
         end
+        logger.info "END(#{file}): done."
       end
 
       logger.info "Tangling succeeded!".green
