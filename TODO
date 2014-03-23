@@ -2,19 +2,25 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [1/4] 0.0.1 version
+* [3/3] 0.0.1 version
 
 Need some basic functionality of what Org babel offers first.
 
 - [X] Display files that were captured with command
   : org-converge setupfile.org --showfiles
-- [ ] ~:tangle~ puts the files in the correct path
+- [X] ~:tangle~ puts the files in the correct path
+- [X] ~--tangle~ flag
+
+* [0/2] 0.0.2 version
+
+Run the code blocks!
+
 - [ ] Code blocks are executed by default after tangling
   Only when :shebang exists as an argument
 - [ ] Display how the run would look like
   : org-converge setupfile.org --dry-run
 
-* [0/2] 0.0.2 version
+* [0/2] 0.0.3 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
