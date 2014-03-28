@@ -52,7 +52,26 @@ module Orgmode
         logger.info "END(#{file}): done."
       end
 
-      logger.info "Tangling succeeded!".green
+      logger.info "Tangling succeeded!"
+    end
+
+    def tangle_runnable_blocks!(run_dir='run')
+      FileUtils.mkdir_p(run_dir)
+
+      logger.info "Tangling #{ob.scripts.count} scripts within directory: #{run_dir}..."
+
+      ob.scripts.each_pair do |script_key, script|
+        file = script_key.to_s
+        if File.exists?(file)
+          logger.warn "File already exists at #{file}, it will be overwritten"
+        end
+
+        File.open(File.join(run_dir, file), 'w') do |f|
+          script[:lines].each_line do |line|
+            f.puts line
+          end
+        end
+      end
     end
 
     class TangleError < Exception; end
