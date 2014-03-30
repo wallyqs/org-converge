@@ -6,21 +6,26 @@
 
 The following will setup and configure ~fluentd~ on a node.
 
-* Settings
-
-These can be defined with Org mode macro directives, but thinking on
-other ways to do it as well.
-
-#+macro: fluentd_port     4224
-#+macro: fluentd_filepath here.log
-
 * Setup 							      :setup:
 
 Fluentd can be installed either as a package from treasure data or
 just as a gem. In this example, we only install as a gem:
 
-#+begin_src sh
-gem install fluentd
+# Fails because of permissions
+#+begin_src sh :shebang #!/bin/bash
+gem list | grep fluentd
+fluentd_installed=$?
+if [ $fluentd_installed -ne 0 ]; then
+  echo "Installing fluentd...";
+  gem install fluentd
+fi
+
+gem list | grep fluent-logger
+fluentd_logger_installed=$?
+if [ $fluentd_logger_installed -ne 0 ]; then
+  echo "Installing fluent-logger for Ruby...";
+  gem install fluent-logger
+fi
 #+end_src
 
 * Configuration 						     :config:
@@ -28,23 +33,49 @@ gem install fluentd
 Set Fluentd to listen on the ~fluentd_port~ port and to write logs
 to ~fluentd_filepath~.
 
-#+begin_src conf :tangle etc/fluentd.conf
+#+begin_src conf :tangle fluentd.conf
 <source>
   type forward
-  port {{{ fluentd_port }}}
+  port 4224
 </source>
 
 <match **>
   type file
-  path {{{ fluentd_filepath }}}
+  path here.log
+  flush_interval 0s
 </match>
 #+end_src
 
 # A script to daemonize the process could be written here, as well as
 # any /etc/default/* required settings...
 
+* Flusher
+
+Send some logs:
+
+#+begin_src ruby :shebang #!/usr/local/bin/ruby
+require 'fluent-logger'
+
+sleep 2 # Wait for fluentd to start at the beginning
+
+Fluent::Logger::FluentLogger.open(nil, :host => 'localhost', :port => 4224)
+
+100.times do |n|
+  Fluent::Logger.post("myapp.access", {"agent"=>"foo - #{n}"})
+  sleep 0.1
+end
+#+end_src
+
+* Tailer
+
+And yet another process which will be tailing the file that we are sending logs too:
+
+#+begin_src sh :shebang #!/bin/bash
+tail -f here.*
+#+end_src
+
 * Start which was configured here 				      :start:
 
-#+begin_src sh
-fluentd -c etc/fluentd.conf -vvv
+#+begin_src bash :shebang #!/bin/bash
+fluentd -c fluentd.conf -vvv
 #+end_src
