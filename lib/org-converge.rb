@@ -26,9 +26,15 @@ module Orgmode
 end
 
 module StringWithColors
-  def red;    colorize("\e[0m\e[31m");  end
-  def green;  colorize("\e[0m\e[32m");  end
-  def yellow; colorize("\e[0m\e[33m");  end
+  def red;            colorize("\e[0m\e[31m");  end
+  def green;          colorize("\e[0m\e[32m");  end
+  def yellow;         colorize("\e[0m\e[33m");  end
+  def blue;           colorize("\e[0m\e[34m");  end
+  def magenta;        colorize("\e[0m\e[35m"); end
+  def cyan;           colorize("\e[0m\e[36m"); end
+  def white;          colorize("\e[0m\e[37m"); end
+  def bright_black;   colorize("\e[0m\e[30m"); end
+  def bright_magenta; colorize("\e[0m\e[35m"); end
   def bold;   colorize("\e[0m\e[1m");   end
   def colorize(color_code); "#{color_code}#{self}\e[0m"; end
 end
