@@ -3,19 +3,21 @@ module OrgConverge
     attr_reader :dotorg
     attr_reader :logger
     attr_reader :ob
+    attr_reader :engine
 
     def initialize(options)
       @options = options
       @dotorg  = options['<org_file>']
       @logger  = Logger.new(options['--log'] || STDOUT)
       @root_dir = options['--root-dir']
-      @ob = Orgmode::Parser.new(File.read(dotorg)).babelize
+      @run_dir  = File.expand_path('run')
+      @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
+      @babel = nil
     end
 
     def execute!
       case
       when @options['--showfiles']
-
         showfiles
       when @options['--tangle']
         tangle!
@@ -25,20 +27,37 @@ module OrgConverge
 
       true
     rescue => e
+      @logger.error e
       false
     end
 
     def converge!
       tangle!
+      run_blocks!
     end
 
     def tangle!
-      begin
-        babel = Orgmode::Babel.new(ob, { :logger => logger, :root_dir => @root_dir })
-        results = babel.tangle!
-      rescue Orgmode::Babel::TangleError
-        logger.error "Cannot converge because there were errors during tangle step".red
+      results = babel.tangle!
+    rescue Orgmode::Babel::TangleError
+      logger.error "Cannot converge because there were errors during tangle step".red
+    end
+
+    # TODO: Too much foreman has made this running blocks in parallel the default behavior.
+    #       We should actually be supporting run lists instead, but liking this experiment so far.
+    def run_blocks!
+      @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+      babel.tangle_runnable_blocks!(@run_dir)
+      babel.ob.scripts.each do |key, script|
+        file = File.expand_path("#{@run_dir}/#{key}")
+        cmd = "#{script[:lang]} #{file}"
+        @engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
       end
+      logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
+      @engine.start
+    end
+
+    def babel
+      @babel ||= Orgmode::Babel.new(ob, { :logger => @logger, :root_dir => @root_dir })
     end
 
     def showfiles
@@ -49,9 +68,9 @@ module OrgConverge
         end
       end
 
-      ob.scripts.each_with_index do |script, index|
-        puts "---------- script: #{index} --------------".green
-        puts script
+      ob.scripts.each do |index, block|
+        puts "---------- script: #{index} to be run with: #{block[:header][:shebang]} --------------".green
+        puts block[:lines]
       end
     end
   end

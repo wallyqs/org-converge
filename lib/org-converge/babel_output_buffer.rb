@@ -12,12 +12,13 @@ module Orgmode
 
       # ~@scripts~ are tangled in order and ran
       # : @scripts = [text, text, ...]
-      @scripts = []
+      @scripts = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
+      @scripts_counter = 0
 
       @buffer = ''
     end
 
-    def push_mode(mode, indent)
+    def push_mode(mode, indent);
       super(mode, indent)
     end
 
@@ -30,13 +31,21 @@ module Orgmode
     def insert(line)
       # We try to get the lang from #+BEGIN_SRC blocks
       if line.begin_block?
-        @block_lang = line.block_lang
-        if line.block_header_arguments[':tangle']
+        case
+        when line.block_header_arguments[':tangle']
           @current_tangle = line.block_header_arguments[':tangle']
-        else
-          @shebang = line.block_header_arguments[':shebang']
+        when line.block_header_arguments[':shebang']
           @current_tangle = nil
           @buffer = ''
+
+          # Need to keep track of the options from a block before running it
+          @scripts[@scripts_counter][:header] = { 
+            :shebang => line.block_header_arguments[':shebang']
+          }
+          @scripts[@scripts_counter][:lang] = line.block_lang
+
+        # TODO: have a way to specify which are the default binaries to be used per language
+        # when binary_detected?(@block_lang)
         end
       end
 
@@ -51,8 +60,9 @@ module Orgmode
       when (!@buffer.empty? and not (line.begin_block? or line.assigned_paragraph_type == :code))
         # Fix indentation and remove pre fix commas from Org mode before flushing
         strip_code_block!
-        @scripts << @buffer
+        @scripts[@scripts_counter][:lines] << @buffer
         @buffer = ''
+        @scripts_counter += 1
       end
 
       @output_type = line.assigned_paragraph_type || line.paragraph_type
@@ -66,6 +76,7 @@ module Orgmode
     # TODO: This should be in the parent class....
     def output_footnotes!; false; end
 
+    # TODO: This should be part of some utils package from OrgRuby
     def strip_code_block!
       if @code_block_indent and @code_block_indent > 0
         strip_regexp = Regexp.new("^" + " " * @code_block_indent)

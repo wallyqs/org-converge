@@ -2,21 +2,28 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/2] 0.0.3 version
+* [/] 0.0.4 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
   + Do not do an operation unless it is required
   + Abort in case there was a failure in executing the script.
+- [ ] Support SETUPFILE
+- [ ] Heuristics for determining which binary to use for running the script
+- [ ] Display how the run would look like without making changes
+  : org-converge setupfile.org --dry-run
 
-* [0/2] 0.0.2 version
+* [0/3] 0.0.3 version
+
+- [ ] Support run lists for sequential execution
+
+* [2/2] 0.0.2 version of org-converge
 
 Run the code blocks!
 
-- [ ] Code blocks are executed by default after tangling
-  Only when :shebang exists as an argument
-- [ ] Display how the run would look like
-  : org-converge setupfile.org --dry-run
+- [X] Code blocks are executed by default after tangling in temp dir
+  Only when ~:shebang~ exists as an argument
+- [X] Default parallel execution of blocks
 
 * [3/3] 0.0.1 version
 
@@ -28,20 +35,7 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [2/14] Ideas
-** CANCELED We don't need to create the directories in most cases
-
-Something like this is not required because the ~:tangle~ blocks
-would create the necessary directories behind the scenes.
-
-#+begin_src org
-  ,We need to prepare some directories for the configuration:
-  
-  ,#+begin_src converge
-  ,mkdir -p etc/fluentd/config
-  ,#+end_src
-#+end_src
-
+* [1/18] Ideas
 ** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
 
 By default, this would be 0644, but we also need to specify the
@@ -53,6 +47,22 @@ hmm dont't like this syntax for folders
 
 Let's keep it simple and just use a babel block that shells out to create the directories
 until I can think of something better.
+** TODO Clarify which ones of the header arguments to implement
+
+http://orgmode.org/manual/Specific-header-arguments.html#Specific-header-arguments
+
+** TODO We don't need to create the directories in most cases (:mkdirp yes)
+
+Something like this is not required because the ~:tangle~ blocks
+would create the necessary directories behind the scenes.
+
+#+begin_src org
+  ,We need to prepare some directories for the configuration:
+  
+  ,#+begin_src converge
+  ,mkdir -p etc/fluentd/config
+  ,#+end_src
+#+end_src
 
 ** TODO By default, it should use current dir for tangling
 ** TODO Converging: Only do an operation when it didn't finish
@@ -165,3 +175,25 @@ sudo service td-agent start
 #+begin_src sh
 sudo /etc/register-to-balancer
 #+end_src
+
+** TODO ~#+NAME:~ could be used in the logger for identifying the process
+** TODO Support caching?
+
+#+begin_src emacs-lisp :cache yes :exports results
+  (random)
+#+end_src
+
+#+RESULTS[db54597aed193d861d01bf92110e10f28f8f40d4]:
+: 842438499349743708
+
+** TODO Support :eval ?
+
+#+begin_src sh :eval (print "Really doing this...")
+  echo "Going ahead with operation X!"
+#+end_src
+
+* Links
+
+Super useful notes:
+http://eschulte.github.io/org-scraps
+
