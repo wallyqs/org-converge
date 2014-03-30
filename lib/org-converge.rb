@@ -2,6 +2,7 @@ require 'org-ruby'
 require 'org-converge/babel_output_buffer'
 require 'org-converge/babel'
 require 'org-converge/command'
+require 'org-converge/engine'
 require 'org-converge/version'
 
 module Orgmode

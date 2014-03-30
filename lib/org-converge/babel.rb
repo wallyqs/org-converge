@@ -29,7 +29,9 @@ module Orgmode
 
         logger.info "BEGIN(#{tangle_file}): Tangling #{lines.count} lines at '#{file}'"
         # TODO: should abort when the directory does not exists
+        #       Org mode blocks have :mkdirp true
         # TODO: should abort when the directory failed because of permissions
+        # TODO: should apply :tangle-mode for permissions
         if not Dir.exists?(File.dirname(file))
           logger.error "Could not tangle #{file} because directory does not exists!"
           raise TangleError

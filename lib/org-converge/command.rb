@@ -3,12 +3,14 @@ module OrgConverge
     attr_reader :dotorg
     attr_reader :logger
     attr_reader :ob
+    attr_reader :engine
 
     def initialize(options)
       @options = options
       @dotorg  = options['<org_file>']
       @logger  = Logger.new(options['--log'] || STDOUT)
       @root_dir = options['--root-dir']
+      @run_dir  = File.expand_path('run')
       @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
       @babel = nil
     end
@@ -32,7 +34,6 @@ module OrgConverge
     def converge!
       tangle!
       run_blocks!
-      logger.info "Done".green
     end
 
     def tangle!
@@ -41,29 +42,22 @@ module OrgConverge
       logger.error "Cannot converge because there were errors during tangle step".red
     end
 
-    # Runs the blocks sequentially
+    # TODO: Too much foreman has made this running blocks in parallel the default behavior.
+    #       We should actually be supporting run lists instead, but liking this experiment so far.
     def run_blocks!
-      # TODO: Should pass the location to the tmp folder here
-      run_dir = File.expand_path('run')
-      babel.tangle_runnable_blocks!(run_dir)
-
-      # Executes the scripts in order
+      @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+      babel.tangle_runnable_blocks!(@run_dir)
       babel.ob.scripts.each do |key, script|
-        bin = script[:lang]
-        file = File.expand_path("#{run_dir}/#{key}")
-        cmd = "#{bin} #{file}"
-        logger.info "#+begin_run: #{cmd}" # 
-        out = system(cmd)
-        logger.info out
-        logger.info "#+end_run"
+        file = File.expand_path("#{@run_dir}/#{key}")
+        cmd = "#{script[:lang]} #{file}"
+        @engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
       end
-    rescue => e
-      puts e
-      puts e.backtrace
+      logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
+      @engine.start
     end
 
     def babel
-      @babel ||= Orgmode::Babel.new(ob, { :logger => logger, :root_dir => @root_dir })
+      @babel ||= Orgmode::Babel.new(ob, { :logger => @logger, :root_dir => @root_dir })
     end
 
     def showfiles

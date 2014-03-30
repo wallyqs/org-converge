@@ -1,0 +1,31 @@
+#+title: Running scripts in parallel
+
+In the following example, the following 3 scripts should be run in parallel
+with all output being flushed to the screen.
+
+- Count some numbers with bash
+
+  #+begin_src sh :shebang #!/bin/bash
+  for i in `seq 1 5`; do 
+  echo "Writing! $i"
+  echo "hello $i" >> out.log
+  sleep $(($RANDOM % 10))
+  done
+  #+end_src
+
+- Count some numbers with ruby
+
+  #+begin_src ruby :shebang #!/usr/bin/ruby
+  10.times do |n|
+    puts "And now writing! #{n}"
+    File.open("out.log", "a") {|f| f.puts "Hello again #{n}" }
+    sleep rand.round(2)
+  end
+  #+end_src
+
+- Print some numbers with python
+
+#+begin_src python :shebang #!/usr/bin/python
+for i in range(0,3):
+  print i
+#+end_src
