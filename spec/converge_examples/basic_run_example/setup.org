@@ -6,6 +6,7 @@ with all output being flushed to the screen.
 - Count some numbers with bash
 
   #+begin_src sh :shebang #!/bin/bash
+  echo '' > out.log
   for i in `seq 1 5`; do 
   echo "Writing! $i"
   echo "hello $i" >> out.log
@@ -16,6 +17,7 @@ with all output being flushed to the screen.
 - Count some numbers with ruby
 
   #+begin_src ruby :shebang #!/usr/bin/ruby
+  sleep 0.2
   10.times do |n|
     puts "And now writing! #{n}"
     File.open("out.log", "a") {|f| f.puts "Hello again #{n}" }
