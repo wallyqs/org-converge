@@ -64,11 +64,10 @@ module Orgmode
 
       ob.scripts.each_pair do |script_key, script|
         file = script_key.to_s
-        if File.exists?(file)
-          logger.warn "File already exists at #{file}, it will be overwritten"
-        end
+        logger.warn "File already exists at #{file}, it will be overwritten" if File.exists?(file)
 
-        File.open(File.join(run_dir, file), 'w') do |f|
+        # Files with :shebang are executable by default
+        File.open(File.join(run_dir, file), 'w', 0755) do |f|
           script[:lines].each_line do |line|
             f.puts line
           end
