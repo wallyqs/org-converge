@@ -10,7 +10,11 @@ module OrgConverge
       @dotorg  = options['<org_file>']
       @logger  = Logger.new(options['--log'] || STDOUT)
       @root_dir = options['--root-dir']
-      @run_dir  = File.expand_path('run')
+      @run_dir  = if @root_dir
+                    File.expand_path(File.join(@root_dir, 'run'))
+                  else
+                    File.expand_path('run')
+                  end
       @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
       @babel = nil
     end
