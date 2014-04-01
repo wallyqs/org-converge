@@ -64,14 +64,14 @@ module OrgConverge
         runlist_stack << [key, script]
       end
 
-      begin
+      while not runlist_stack.empty?
         key, script = runlist_stack.shift
         with_running_engine do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
           cmd = "#{script[:lang]} #{file}"
           engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
         end
-      end while not runlist_stack.empty?
+      end
       logger.info "Run has completed successfully.".green
     end
 
@@ -101,11 +101,9 @@ module OrgConverge
     end
 
     def showfiles
-      ob.tangle.each do |file, lines|
+      ob.tangle.each do |file, block|
         puts "---------- #{file} --------------".green
-        lines.each do |line|
-          puts line
-        end
+        puts block[:lines]
       end
 
       ob.scripts.each do |index, block|

@@ -8,7 +8,7 @@ module Orgmode
 
       # ~@tangle~ files are put in the right path
       # : @tangle['/path'] = [Lines]
-      @tangle  = Hash.new {|h,k| h[k] = []}
+      @tangle  = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
 
       # ~@scripts~ are tangled in order and ran
       # : @scripts = [text, text, ...]
@@ -34,13 +34,19 @@ module Orgmode
         case
         when line.block_header_arguments[':tangle']
           @current_tangle = line.block_header_arguments[':tangle']
+          @tangle[@current_tangle][:header] = {
+            :shebang => line.block_header_arguments[':shebang'],
+            :mkdirp  => line.block_header_arguments[':mkdirp']
+          }
+          @tangle[@current_tangle][:lang] = line.block_lang
         when line.block_header_arguments[':shebang']
           @current_tangle = nil
           @buffer = ''
 
           # Need to keep track of the options from a block before running it
           @scripts[@scripts_counter][:header] = { 
-            :shebang => line.block_header_arguments[':shebang']
+            :shebang => line.block_header_arguments[':shebang'],
+            :mkdirp  => line.block_header_arguments[':mkdirp']
           }
           @scripts[@scripts_counter][:lang] = line.block_lang
 
@@ -52,7 +58,7 @@ module Orgmode
       case
       when (line.assigned_paragraph_type == :code and @current_tangle)
         # Need to keep track of the current tangle to buffer its lines
-        @tangle[@current_tangle] << line
+        @tangle[@current_tangle][:lines] << line.output_text << "\n"
       when (line.assigned_paragraph_type == :code)
         # When a tangle is not going on, it means that the lines would go
         # into a runnable script

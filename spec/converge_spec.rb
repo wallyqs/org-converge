@@ -19,6 +19,9 @@ describe OrgConverge::Command do
 
     result = File.read(resulting_file)
     result.should == expected_contents
+
+    resulting_file = File.join(example_dir, 'config/hello.yml')
+    File.exists?(resulting_file).should == true
   end
 
   it "should converge 'basic_run_example'" do

@@ -19,24 +19,28 @@ module Orgmode
     def tangle!
       logger.info "Tangling #{ob.tangle.keys.count} files..."
 
-      ob.tangle.each do |tangle_file, lines|
+      ob.tangle.each do |tangle_file, script|
         file = if @root_dir
                  File.join(@root_dir, tangle_file)
                else
                  tangle_file
                end
 
-        logger.info "BEGIN(#{tangle_file}): Tangling #{lines.count} lines at '#{file}'"
-        # TODO: should abort when the directory does not exists
-        #       Org mode blocks have :mkdirp true
+        logger.info "BEGIN(#{tangle_file}): Tangling #{script[:lines].split('\n').count} lines at '#{file}'"
         # TODO: should abort when the directory failed because of permissions
         # TODO: should apply :tangle-mode for permissions
-        if not Dir.exists?(File.dirname(file))
-          logger.debug "Could not tangle #{file} because directory does not exists! Try to create."
+        directory = File.expand_path(File.dirname(file))
+        if not Dir.exists?(directory)
           begin
-            logger.info "Create dir for #{file} since it does not exists."
-            FileUtils.mkdir_p(file, :mode => 0755)
-          rescue
+            if script[:header][:mkdirp] == 'true'
+              p script
+              logger.info "Create dir for #{file} since it does not exists..."
+              FileUtils.mkdir_p(File.dirname(file), :mode => 0755)
+            else
+              logger.warn "Cannot tangle #{file} because directory does not exists!"
+            end
+          rescue => e
+            p e
             raise TangleError
           end
         end
@@ -47,7 +51,7 @@ module Orgmode
 
         begin
           File.open(file, 'w') do |f|
-            lines.each do |line|
+            script[:lines].each_line do |line|
               f.puts line
             end
           end
