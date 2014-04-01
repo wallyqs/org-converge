@@ -41,7 +41,7 @@ module OrgConverge
       when 'parallel'
         run_blocks_in_parallel!
       when 'sequential'
-        # TODO
+        run_blocks_sequentially!
       when 'runlist'
         # TODO
       else
@@ -53,6 +53,26 @@ module OrgConverge
       results = babel.tangle!
     rescue Orgmode::Babel::TangleError
       logger.error "Cannot converge because there were errors during tangle step".red
+    end
+
+    def run_blocks_sequentially!
+      @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+      babel.tangle_runnable_blocks!(@run_dir)
+
+      runlist_stack = []
+      babel.ob.scripts.each do |key, script|
+        runlist_stack << [key, script]
+      end
+
+      begin
+        key, script = runlist_stack.shift
+        with_running_engine do |engine|
+          file = File.expand_path("#{@run_dir}/#{key}")
+          cmd = "#{script[:lang]} #{file}"
+          engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
+        end
+      end while not runlist_stack.empty?
+      logger.info "Run has completed successfully.".green
     end
 
     # TODO: Too much foreman has made this running blocks in parallel the default behavior.
@@ -67,6 +87,13 @@ module OrgConverge
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
       @engine.start
+      logger.info "Run has completed successfully.".green
+    end
+
+    def with_running_engine
+      engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+      yield engine
+      engine.start
     end
 
     def babel

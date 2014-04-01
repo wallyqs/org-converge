@@ -18,7 +18,7 @@ module Orgmode
       @buffer = ''
     end
 
-    def push_mode(mode, indent);
+    def push_mode(mode, indent)
       super(mode, indent)
     end
 
