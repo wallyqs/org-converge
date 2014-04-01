@@ -49,7 +49,7 @@ describe OrgConverge::Command do
 
     File.executable?(File.join(example_dir, 'run/0')).should == true
     File.executable?(File.join(example_dir, 'run/1')).should == true
-    expected_contents = "first\nsecond"
+    expected_contents = "first\nsecond\n"
     File.read(File.join(example_dir, 'out.log')).should == expected_contents
   end
 end
