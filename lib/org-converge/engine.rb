@@ -25,9 +25,8 @@ module OrgConverge
       watch_for_output
       sleep 0.1
       begin
-        status = watch_for_termination
+        status = watch_for_termination        
       end while @running.count > 0
-      logger.info "Run has completed successfully.".green
     end
 
     # Overriden: we do not consider process formations

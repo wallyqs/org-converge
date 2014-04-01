@@ -16,3 +16,10 @@ mysql:
   host: somewhere-example.local
   password: 111111111
 #+end_src
+
+When directory does not exists, it should create
+when =:mkdirp= is specified.
+
+#+begin_src yaml :tangle config/hello.yml :mkdirp true
+config: 'hello'
+#+end_src

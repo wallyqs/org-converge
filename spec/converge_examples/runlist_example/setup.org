@@ -1,0 +1,15 @@
+# -*- mode: org; mode: auto-fill; -*-
+#+TITLE: Runlist example
+
+In this example, we will have scripts being chained one after another.
+
+#+begin_src sh :shebang #!/bin/bash
+sleep 5
+echo "first" > out.log
+#+end_src
+
+The script below will only be called once the one above is run.
+
+#+begin_src ruby :shebang #!/usr/local/bin/ruby
+File.open("out.log", 'a') {|f| f.puts "second" }
+#+end_src

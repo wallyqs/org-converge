@@ -16,25 +16,33 @@ module Orgmode
       @root_dir = options[:root_dir]
     end
 
-    # TODO: should be able to tangle relatively to a dir
     def tangle!
       logger.info "Tangling #{ob.tangle.keys.count} files..."
 
-      ob.tangle.each do |tangle_file, lines|
+      ob.tangle.each do |tangle_file, script|
         file = if @root_dir
                  File.join(@root_dir, tangle_file)
                else
                  tangle_file
                end
 
-        logger.info "BEGIN(#{tangle_file}): Tangling #{lines.count} lines at '#{file}'"
-        # TODO: should abort when the directory does not exists
-        #       Org mode blocks have :mkdirp true
+        logger.info "BEGIN(#{tangle_file}): Tangling #{script[:lines].split('\n').count} lines at '#{file}'"
         # TODO: should abort when the directory failed because of permissions
         # TODO: should apply :tangle-mode for permissions
-        if not Dir.exists?(File.dirname(file))
-          logger.error "Could not tangle #{file} because directory does not exists!"
-          raise TangleError
+        directory = File.expand_path(File.dirname(file))
+        if not Dir.exists?(directory)
+          begin
+            if script[:header][:mkdirp] == 'true'
+              p script
+              logger.info "Create dir for #{file} since it does not exists..."
+              FileUtils.mkdir_p(File.dirname(file), :mode => 0755)
+            else
+              logger.warn "Cannot tangle #{file} because directory does not exists!"
+            end
+          rescue => e
+            p e
+            raise TangleError
+          end
         end
 
         if File.exists?(file)
@@ -43,7 +51,7 @@ module Orgmode
 
         begin
           File.open(file, 'w') do |f|
-            lines.each do |line|
+            script[:lines].each_line do |line|
               f.puts line
             end
           end
@@ -64,11 +72,10 @@ module Orgmode
 
       ob.scripts.each_pair do |script_key, script|
         file = script_key.to_s
-        if File.exists?(file)
-          logger.warn "File already exists at #{file}, it will be overwritten"
-        end
+        logger.warn "File already exists at #{file}, it will be overwritten" if File.exists?(file)
 
-        File.open(File.join(run_dir, file), 'w') do |f|
+        # Files with :shebang are executable by default
+        File.open(File.join(run_dir, file), 'w', 0755) do |f|
           script[:lines].each_line do |line|
             f.puts line
           end

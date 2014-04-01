@@ -2,8 +2,9 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [/] 0.0.4 version
+* [0/6] 0.0.4 version
 
+- [ ] Support runlists notifications via =#+NAME:=
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
   + Do not do an operation unless it is required
@@ -12,10 +13,13 @@
 - [ ] Heuristics for determining which binary to use for running the script
 - [ ] Display how the run would look like without making changes
   : org-converge setupfile.org --dry-run
+- [ ] Use :eval for evaling blocks (off by default)
+- [ ] Can use :dir for running a process relative to that directory
 
-* [0/3] 0.0.3 version
+* [2/2] 0.0.3 version
 
-- [ ] Support run lists for sequential execution
+- [X] Support sequential and parallel execution
+- [X] Can use :mkdirp for 0644 permissions
 
 * [2/2] 0.0.2 version of org-converge
 
@@ -35,7 +39,7 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [1/18] Ideas
+* [1/19] Ideas
 ** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
 
 By default, this would be 0644, but we also need to specify the
@@ -51,6 +55,7 @@ until I can think of something better.
 
 http://orgmode.org/manual/Specific-header-arguments.html#Specific-header-arguments
 
+** TODO Use sshkit for running remote processes
 ** TODO We don't need to create the directories in most cases (:mkdirp yes)
 
 Something like this is not required because the ~:tangle~ blocks
