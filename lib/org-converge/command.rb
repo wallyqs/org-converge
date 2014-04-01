@@ -37,7 +37,16 @@ module OrgConverge
 
     def converge!
       tangle!
-      run_blocks!
+      case @options['--runmode']
+      when 'parallel'
+        run_blocks_in_parallel!
+      when 'sequential'
+        # TODO
+      when 'runlist'
+        # TODO
+      else
+        run_blocks_in_parallel!
+      end
     end
 
     def tangle!
@@ -48,7 +57,7 @@ module OrgConverge
 
     # TODO: Too much foreman has made this running blocks in parallel the default behavior.
     #       We should actually be supporting run lists instead, but liking this experiment so far.
-    def run_blocks!
+    def run_blocks_in_parallel!
       @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
       babel.tangle_runnable_blocks!(@run_dir)
       babel.ob.scripts.each do |key, script|
