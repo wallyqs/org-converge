@@ -16,7 +16,6 @@ module Orgmode
       @root_dir = options[:root_dir]
     end
 
-    # TODO: should be able to tangle relatively to a dir
     def tangle!
       logger.info "Tangling #{ob.tangle.keys.count} files..."
 
@@ -33,8 +32,13 @@ module Orgmode
         # TODO: should abort when the directory failed because of permissions
         # TODO: should apply :tangle-mode for permissions
         if not Dir.exists?(File.dirname(file))
-          logger.error "Could not tangle #{file} because directory does not exists!"
-          raise TangleError
+          logger.debug "Could not tangle #{file} because directory does not exists! Try to create."
+          begin
+            logger.info "Create dir for #{file} since it does not exists."
+            FileUtils.mkdir_p(file, :mode => 0755)
+          rescue
+            raise TangleError
+          end
         end
 
         if File.exists?(file)
