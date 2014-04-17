@@ -46,12 +46,15 @@ module Orgmode
           # Need to keep track of the options from a block before running it
           @scripts[@scripts_counter][:header] = { 
             :shebang => line.block_header_arguments[':shebang'],
-            :mkdirp  => line.block_header_arguments[':mkdirp']
+            :mkdirp  => line.block_header_arguments[':mkdirp'],
+            :name    => line.properties['block_name']
           }
           @scripts[@scripts_counter][:lang] = line.block_lang
 
         # TODO: have a way to specify which are the default binaries to be used per language
         # when binary_detected?(@block_lang)
+        else
+          # pass
         end
       end
 
@@ -64,7 +67,7 @@ module Orgmode
         # into a runnable script
         @buffer << line.output_text << "\n"
       when (!@buffer.empty? and not (line.begin_block? or line.assigned_paragraph_type == :code))
-        # Fix indentation and remove pre fix commas from Org mode before flushing
+        # Fix indentation and remove fix commas from Org mode before flushing
         strip_code_block!
         @scripts[@scripts_counter][:lines] << @buffer
         @buffer = ''

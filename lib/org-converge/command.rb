@@ -69,7 +69,8 @@ module OrgConverge
         with_running_engine do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
           cmd = "#{script[:lang]} #{file}"
-          engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
+          display_name = script[:header][:name] || script[:lang]
+          engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
         end
       end
       logger.info "Run has completed successfully.".green
@@ -83,7 +84,8 @@ module OrgConverge
       babel.ob.scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
         cmd = "#{script[:lang]} #{file}"
-        @engine.register script[:lang], cmd, { :cwd => @root_dir, :logger => logger }
+        display_name = script[:header][:name] || script[:lang]
+        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
       @engine.start
