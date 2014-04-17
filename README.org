@@ -1,7 +1,7 @@
 # -*- mode: org; mode: auto-fill; -*-
-#+TITLE:	Org Converge
 #+STARTUP:	showeverything
 
+* Org Converge
 ** Description
 
   This attempts to be an experiment of using Org mode syntax to
@@ -37,7 +37,7 @@ org-converge path/to/setup-file.org --runmode=sequential
    in parallel by defining them as code blocks from 
    an Org mode file:
 
-#+begin_src org
+#+begin_src sh
   ,#+TITLE: Running Org babel processes in parallel
    
   * Print with different languages
