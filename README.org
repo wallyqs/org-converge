@@ -122,28 +122,28 @@ I, [2014-04-17T23:48:47.884196 #1710]  INFO -- : hello_from_python     (1713) --
   should be able to do the following:
 
   #+begin_src sh
-    ,* Configuring the component
+  ,* Configuring the component
 
-    ,#+begin_src yaml :tangle /etc/component.yml
-    multitenant: false
-    status_port: 10004
-    ,#+end_src  
+  ,#+begin_src yaml :tangle /etc/component.yml
+  multitenant: false
+  status_port: 10004
+  ,#+end_src  
 　
-    ,* Installing the dependencies
+  ,* Installing the dependencies
 　
-    Need the following so that ~bundle install~ can compile 
-    the native extensions correctly.
+  Need the following so that ~bundle install~ can compile 
+  the native extensions correctly.
 　
-    ,#+begin_src sh
-    apt-get install build-essentials -y
-    ,#+end_src
+  ,#+begin_src sh
+  apt-get install build-essentials -y
+  ,#+end_src
 　
-    Then the following should work:
+  Then the following should work:
 　
-    ,#+begin_src sh
-    cd project_path
-    bundle install
-    ,#+end_src
+  ,#+begin_src sh
+  cd project_path
+  bundle install
+  ,#+end_src
   #+end_src
 
   As long as the repo has been already checked out in the directory, 
