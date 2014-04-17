@@ -75,7 +75,6 @@ org-converge hello.org
 #+begin_src sh
 I, [2014-04-17T23:48:44.663545 #1710]  INFO -- : Tangling 0 files...
 I, [2014-04-17T23:48:44.663698 #1710]  INFO -- : Tangling succeeded!
-I, [2014-04-17T23:48:44.664024 #1710]  INFO -- : Tangling 4 scripts within directory: /Users/mariko/repos/literate-infrastructure/run...
 I, [2014-04-17T23:48:44.664829 #1710]  INFO -- : Running code blocks now! (4 runnable blocks found in total)
 I, [2014-04-17T23:48:44.762899 #1710]  INFO -- : hello_from_bash       (1711) -- started with pid 1711
 I, [2014-04-17T23:48:44.808717 #1710]  INFO -- : hello_from_ruby       (1712) -- started with pid 1712
