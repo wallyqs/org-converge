@@ -2,14 +2,14 @@
 #+TITLE:	Org Converge
 #+STARTUP:	showeverything
 
-* Description
+** Description
 
   This attempts to be an experiment of using Org mode syntax to
   describe, configure and setting up something, borrowing some ideas
   of what is possible to do with tools like =chef-solo=, =puppet=,
   =ansible=, etc...
 
-* Motivation
+** Motivation
 
   The Org babel syntax has proven to be flexible enough to produce
   /reproducible research/ papers. Then, I believe that configuring and setting up
@@ -17,11 +17,85 @@
   the same syntax, given that /converging/ the configuration is something
   that one ought to be able to reproduce.
 
-* Usage
+** Usage
 
-: org-converge path/to/setup-file.org
+   To run the blocks in parallel:
 
-* How it works
+#+begin_src sh
+org-converge path/to/setup-file.org
+#+end_src
+
+   Or sequentially:
+
+#+begin_src sh
+org-converge path/to/setup-file.org --runmode=sequential
+#+end_src
+
+** Quick example
+
+   The following is an example of running 3 processes
+   in parallel by defining them as code blocks from 
+   an Org mode file:
+
+#+begin_src org
+  ,#+TITLE: Running Org babel processes in parallel
+   
+  * Print with different languages
+   
+  ,#+name: hello_from_bash
+  ,#+begin_src sh :shebang #!/bin/bash
+  while true; do echo "hello world from bash"; sleep 1; done
+  ,#+end_src
+   
+  ,#+name: hello_from_ruby
+  ,#+begin_src ruby :shebang #!/usr/local/bin/ruby
+  $stdout.sync = true
+  loop { puts "hello world from ruby" ; sleep 1 }
+  ,#+end_src
+  , 
+  ,#+name: hello_from_python
+  ,#+begin_src python :shebang #!/usr/bin/python
+  import time
+  import sys
+  for i in range(0,100):
+    print "hello world from python"
+    sys.stdout.flush()
+    time.sleep(1)
+  ,#+end_src   
+#+end_src
+
+  We store this in a file named =hello.org= and then run it as follows:
+
+#+begin_src sh
+org-converge hello.org
+#+end_src
+
+  This would produce an output similar to the following:
+
+#+begin_src sh
+I, [2014-04-17T23:48:44.663545 #1710]  INFO -- : Tangling 0 files...
+I, [2014-04-17T23:48:44.663698 #1710]  INFO -- : Tangling succeeded!
+I, [2014-04-17T23:48:44.664024 #1710]  INFO -- : Tangling 4 scripts within directory: /Users/mariko/repos/literate-infrastructure/run...
+I, [2014-04-17T23:48:44.664829 #1710]  INFO -- : Running code blocks now! (4 runnable blocks found in total)
+I, [2014-04-17T23:48:44.762899 #1710]  INFO -- : hello_from_bash       (1711) -- started with pid 1711
+I, [2014-04-17T23:48:44.808717 #1710]  INFO -- : hello_from_ruby       (1712) -- started with pid 1712
+I, [2014-04-17T23:48:44.837878 #1710]  INFO -- : hello_from_python     (1713) -- started with pid 1713
+I, [2014-04-17T23:48:44.878336 #1710]  INFO -- :                       (1714) -- started with pid 1714
+I, [2014-04-17T23:48:44.879284 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
+I, [2014-04-17T23:48:44.882778 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
+I, [2014-04-17T23:48:44.883637 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
+I, [2014-04-17T23:48:45.778681 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
+I, [2014-04-17T23:48:45.792321 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
+I, [2014-04-17T23:48:45.882020 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
+I, [2014-04-17T23:48:46.787106 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
+I, [2014-04-17T23:48:46.793347 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
+I, [2014-04-17T23:48:46.883511 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
+I, [2014-04-17T23:48:47.794846 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
+I, [2014-04-17T23:48:47.796387 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
+I, [2014-04-17T23:48:47.884196 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
+#+end_src
+
+** How it works
 
   Org Converge uses an liberally extended version of Org Babel
   features in order to give support for converging the configuration
@@ -31,9 +105,6 @@
   files on a server by writing the following on a ~server.org~ file.
 
   #+begin_src org
-    ,#+MACRO: multitenancy_enabled true
-    ,#+MACRO: status_port true
-    
     ,#+begin_src yaml :tangle /etc/component.yml
     multitenant: false
     status_port: 10004
@@ -47,24 +118,11 @@
   org-converge server.org
   #+end_src
 
-  This leverages on the syntax already provided by Org Babel, but one
-  difference here is that if we run it once again without changes...
-
-  #+begin_src sh
-  org-converge server.org
-  #+end_src
-  
-  ...it would finish soon since the configuration has already converged.
-
   Next, let's say that we no only one want to set the configured templates,
   but that we also want to install some packages. In that case, we
   should be able to do the following:
 
   #+begin_src org
-    ,#+macro: multitenancy_enabled true
-    ,#+macro: status_port  true
-    ,#+macro: project_path path/to/project
-
     ,* Configuring the component
 
     ,#+begin_src yaml :tangle /etc/component.yml
@@ -84,7 +142,7 @@
     Then the following should work:
 
     ,#+begin_src sh
-    cd {{{project_path}}}
+    cd project_path
     bundle install
     ,#+end_src
   #+end_src
@@ -92,18 +150,11 @@
   As long as the repo has been already checked out in the directory, 
   the previous example will succeed. 
 
-  #+begin_src sh
-  org-converge server.org
-  #+end_src
-
-  If that is not the case, then org-converge will fail 
-  and pickup from that last step.
-
   More practical examples can be found [[here]], more will be added as
   long as dogfooding from this goes well.
 
-* Contributing
+** Contributing
 
-The project is in very early development at this moment, but if you
-feel that it is interesting enough, please create a ticket so start
-the discussion.
+  The project is in very early development at this moment, but if you
+  feel that it is interesting enough, please create a ticket so start
+  the discussion.
