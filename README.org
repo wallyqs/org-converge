@@ -111,10 +111,10 @@ I, [2014-04-17T23:48:47.884196 #1710]  INFO -- : hello_from_python     (1713) --
   #+end_src
 
   And then configure it by running it as follows, (considering we have
-  the correct permissions): 
+  the correct permissions for tangling at =/etc/component.yml=): 
 
   #+begin_src sh
-  org-converge server.org
+  sudo org-converge server.org
   #+end_src
 
   Next, let's say that we no only one want to set the configured templates,
