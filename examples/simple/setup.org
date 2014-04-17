@@ -7,20 +7,11 @@ It does not get more simple than this:
   #+begin_src conf :tangle /tmp/my-conf
 <source>
   bind 0.0.0.0
-
-
-
   port 4224
-
-
-
-
 </source>
 
 <match **>
   type file
-
-
   path /var/tmp/a.log
 </match>
   #+end_src
