@@ -149,7 +149,7 @@ I, [2014-04-17T23:48:47.884196 #1710]  INFO -- : hello_from_python     (1713) --
   As long as the repo has been already checked out in the directory, 
   the previous example will succeed. 
 
-  More practical examples can be found [[here]], more will be added as
+  More practical examples can be found [[https://github.com/wallyqs/org-converge/tree/master/examples][here]], more will be added as
   long as dogfooding from this goes well.
 
 ** Contributing
