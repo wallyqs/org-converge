@@ -4,12 +4,15 @@
 #
 require 'foreman/engine'
 require 'foreman/process'
+require 'tco'
 
 module OrgConverge
   class Engine < Foreman::Engine
 
     attr_reader :logger
     attr_reader :babel
+
+    RAINBOW = ["#622e90", "#2d3091", "#00aaea", "#02a552", "#fdea22", "#eb443b", "#f37f5a"]
 
     def initialize(options={})
       super(options)
@@ -35,7 +38,7 @@ module OrgConverge
         reader, writer = create_pipe
         begin
           pid = process.run(:output => writer)
-          @names[process] = "#{@names[process]}(#{pid})"
+          @names[process] = "#{@names[process]}.#{pid}"
           writer.puts "started with pid #{pid}"
         rescue Errno::ENOENT
           writer.puts "unknown command: #{process.command}"
@@ -55,10 +58,9 @@ module OrgConverge
 
     def output(name, data)
       data.to_s.lines.map(&:chomp).each do |message|
-
         # FIXME: In case the process has finished before its lines where flushed
-        ps = name.empty? ? '<defunct>' : name.split('.').first
-        output  = "#{pad_process_name(ps)}".yellow
+        ps, pid = name.empty? ? '<defunct>' : name.split('.')
+        output  = "#{pad_process_name(ps)}(#{pid})".fg get_color_for_pid(pid.to_i)
         output += " -- "
         output += message
         # FIXME: When the process has stopped already,
@@ -79,6 +81,10 @@ module OrgConverge
 
     def pad_process_name(name)
       name.ljust(name_padding, " ")
+    end
+
+    def get_color_for_pid(pid)
+      RAINBOW[pid % 7]
     end
   end
 

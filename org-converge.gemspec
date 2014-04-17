@@ -17,4 +17,5 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency('docopt', '0.5.0')
   gem.add_runtime_dependency('org-ruby', '~> 0.9.2')
   gem.add_runtime_dependency('foreman', '~> 0.63.0')
+  gem.add_runtime_dependency('tco', '~> 0.1.0')
 end
