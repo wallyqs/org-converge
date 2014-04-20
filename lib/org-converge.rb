@@ -14,7 +14,10 @@ module Orgmode
       # Feed the parsed contens and create the necessary internal structures
       # for doing babel like features
       output = ''
-      ob = BabelOutputBuffer.new(output)
+      babel_options = { 
+        :in_buffer_settings => @in_buffer_settings
+      }
+      ob = BabelOutputBuffer.new(output, babel_options)
       translate(@header_lines, ob)
       @headlines.each do |headline|
         translate(headline.body_lines, ob)
@@ -24,3 +27,9 @@ module Orgmode
     end
   end
 end
+
+require 'tco'
+conf = Tco.config
+conf.names["green"] = "#02a552"
+conf.names["red"]   = "#eb443b"
+Tco.reconfigure conf

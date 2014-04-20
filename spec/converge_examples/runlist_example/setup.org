@@ -1,5 +1,6 @@
 # -*- mode: org; mode: auto-fill; -*-
-#+TITLE: Runlist example
+#+TITLE:	Runlist example
+#+runmode:	sequential
 
 In this example, we will have scripts being chained one after another.
 

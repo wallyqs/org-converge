@@ -2,9 +2,12 @@ module Orgmode
   class BabelOutputBuffer < OutputBuffer
     attr_reader :tangle
     attr_reader :scripts
+    attr_reader :in_buffer_settings
 
-    def initialize(output)
+    def initialize(output, opts={})
       super(output)
+
+      @in_buffer_settings = opts[:in_buffer_settings]
 
       # ~@tangle~ files are put in the right path
       # : @tangle['/path'] = [Lines]
@@ -14,7 +17,6 @@ module Orgmode
       # : @scripts = [text, text, ...]
       @scripts = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
       @scripts_counter = 0
-
       @buffer = ''
     end
 

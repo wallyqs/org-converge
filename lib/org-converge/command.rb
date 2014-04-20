@@ -37,14 +37,24 @@ module OrgConverge
 
     def converge!
       tangle!
-      case @options['--runmode']
+      if @options['--runmode']
+        dispatch_runmode(@options['--runmode'])
+      else
+        # Try to find one in the buffer
+        runmode = ob.in_buffer_settings['RUNMODE']
+        dispatch_runmode(runmode)
+      end
+    end
+
+    def dispatch_runmode(runmode)
+      case runmode
       when 'parallel'
         run_blocks_in_parallel!
       when 'sequential'
         run_blocks_sequentially!
       when 'runlist'
         # TODO
-      else
+      else # parallel by default
         run_blocks_in_parallel!
       end
     end
@@ -52,7 +62,7 @@ module OrgConverge
     def tangle!
       results = babel.tangle!
     rescue Orgmode::Babel::TangleError
-      logger.error "Cannot converge because there were errors during tangle step".red
+      logger.error "Cannot converge because there were errors during tangle step".fg 'red'
     end
 
     def run_blocks_sequentially!
@@ -77,7 +87,7 @@ module OrgConverge
           engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
         end
       end
-      logger.info "Run has completed successfully.".green
+      logger.info "Run has completed successfully.".fg 'green'
     end
 
     # TODO: Too much foreman has made this running blocks in parallel the default behavior.
@@ -97,7 +107,7 @@ module OrgConverge
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
       @engine.start
-      logger.info "Run has completed successfully.".green
+      logger.info "Run has completed successfully.".fg 'green'
     end
 
     def with_running_engine
@@ -112,12 +122,12 @@ module OrgConverge
 
     def showfiles
       ob.tangle.each do |file, block|
-        puts "---------- #{file} --------------".green
+        puts "---------- #{file} --------------".fg 'green'
         puts block[:lines]
       end
 
       ob.scripts.each do |index, block|
-        puts "---------- script: #{index} to be run with: #{block[:header][:shebang]} --------------".green
+        puts "---------- script: #{index} to be run with: #{block[:header][:shebang]} --------------".fg 'green'
         puts block[:lines]
       end
     end
