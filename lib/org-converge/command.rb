@@ -66,10 +66,14 @@ module OrgConverge
 
       while not runlist_stack.empty?
         key, script = runlist_stack.shift
+
+        # Decision: Only run blocks which have a name
+        next unless script[:header][:name]
+
+        display_name = script[:header][:name]
         with_running_engine do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
           cmd = "#{script[:lang]} #{file}"
-          display_name = script[:header][:name] || script[:lang]
           engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
         end
       end
@@ -84,7 +88,11 @@ module OrgConverge
       babel.ob.scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
         cmd = "#{script[:lang]} #{file}"
-        display_name = script[:header][:name] || script[:lang]
+
+        # Decision: Only run blocks which have a name
+        next unless script[:header][:name]
+
+        display_name = script[:header][:name]
         @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"

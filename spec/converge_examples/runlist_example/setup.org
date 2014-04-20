@@ -3,6 +3,7 @@
 
 In this example, we will have scripts being chained one after another.
 
+#+name: first
 #+begin_src sh :shebang #!/bin/bash
 sleep 5
 echo "first" > out.log
@@ -10,6 +11,7 @@ echo "first" > out.log
 
 The script below will only be called once the one above is run.
 
+#+name: second
 #+begin_src ruby :shebang #!/usr/local/bin/ruby
 File.open("out.log", 'a') {|f| f.puts "second" }
 #+end_src
