@@ -2,9 +2,8 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/6] 0.0.4 version
+* [0/7] > 0.0.9 version
 
-- [ ] Support runlists notifications via =#+NAME:=
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
   + Do not do an operation unless it is required
@@ -15,6 +14,21 @@
   : org-converge setupfile.org --dry-run
 - [ ] Use :eval for evaling blocks (off by default)
 - [ ] Can use :dir for running a process relative to that directory
+
+* [0/3] 0.0.6 version
+
+- [ ] Keyword to accumulate run blocks
+- [ ] Do not run commented blocks
+- [ ] Use rake task manager
+
+* [2/2] 0.0.5 version
+
+- [X] Do not run or tangle blocks without arguments
+- [X] Keyword to activate runmode in the text itself
+
+* [1/1] 0.0.4 version
+
+- [X] Support runlists notifications via =#+NAME:=
 
 * [2/2] 0.0.3 version
 
@@ -39,7 +53,7 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [1/19] Ideas
+* [3/19] Ideas
 ** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
 
 By default, this would be 0644, but we also need to specify the
@@ -131,7 +145,7 @@ Kind of like the chef-solo runlist, a headline like this...
 org-converge fluentd.org -t config
 #+end_src
 
-** TODO Managing dependencies: could be handled with ~#+include~ directives
+** DONE Managing dependencies: could be handled with ~#+include~ directives
 
 One idea is that it would be useful to compile different manuals
 that are dependent among each other. 
@@ -181,7 +195,7 @@ sudo service td-agent start
 sudo /etc/register-to-balancer
 #+end_src
 
-** TODO ~#+NAME:~ could be used in the logger for identifying the process
+** DONE ~#+NAME:~ could be used in the logger for identifying the process
 ** TODO Support caching?
 
 #+begin_src emacs-lisp :cache yes :exports results
@@ -199,6 +213,6 @@ sudo /etc/register-to-balancer
 
 * Links
 
-Super useful notes:
 http://eschulte.github.io/org-scraps
 
+http://doc.norang.ca/org-mode.html
