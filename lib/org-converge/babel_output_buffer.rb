@@ -2,9 +2,12 @@ module Orgmode
   class BabelOutputBuffer < OutputBuffer
     attr_reader :tangle
     attr_reader :scripts
+    attr_reader :in_buffer_settings
 
-    def initialize(output)
+    def initialize(output, opts={})
       super(output)
+
+      @in_buffer_settings = opts[:in_buffer_settings]
 
       # ~@tangle~ files are put in the right path
       # : @tangle['/path'] = [Lines]
@@ -14,7 +17,6 @@ module Orgmode
       # : @scripts = [text, text, ...]
       @scripts = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
       @scripts_counter = 0
-
       @buffer = ''
     end
 
@@ -29,7 +31,7 @@ module Orgmode
     end
 
     def insert(line)
-      # We try to get the lang from #+BEGIN_SRC blocks
+      # We try to get the lang from #+BEGIN_SRC and #+BEGIN_EXAMPLE blocks
       if line.begin_block?
         case
         when line.block_header_arguments[':tangle']
@@ -39,7 +41,8 @@ module Orgmode
             :mkdirp  => line.block_header_arguments[':mkdirp']
           }
           @tangle[@current_tangle][:lang] = line.block_lang
-        when line.block_header_arguments[':shebang']
+        when line.properties['block_name']
+          # unnamed blocks are not run
           @current_tangle = nil
           @buffer = ''
 
@@ -50,11 +53,12 @@ module Orgmode
             :name    => line.properties['block_name']
           }
           @scripts[@scripts_counter][:lang] = line.block_lang
-
         # TODO: have a way to specify which are the default binaries to be used per language
         # when binary_detected?(@block_lang)
         else
-          # pass
+          # reset tangling
+          @current_tangle = nil
+          @buffer = ''
         end
       end
 
@@ -66,7 +70,8 @@ module Orgmode
         # When a tangle is not going on, it means that the lines would go
         # into a runnable script
         @buffer << line.output_text << "\n"
-      when (!@buffer.empty? and not (line.begin_block? or line.assigned_paragraph_type == :code))
+      when (!@buffer.empty? and not (line.begin_block? or \
+                                     line.assigned_paragraph_type == :code))
         # Fix indentation and remove fix commas from Org mode before flushing
         strip_code_block!
         @scripts[@scripts_counter][:lines] << @buffer

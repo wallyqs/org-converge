@@ -1,33 +1,45 @@
-#+title: Running scripts in parallel
+#+TITLE:        Running scripts in parallel
 
 In the following example, the following 3 scripts should be run in parallel
 with all output being flushed to the screen.
 
 - Count some numbers with bash
 
-  #+begin_src sh :shebang #!/bin/bash
-  echo '' > out.log
-  for i in `seq 1 5`; do 
-  echo "Writing! $i"
-  echo "hello $i" >> out.log
-  sleep $(($RANDOM % 10))
-  done
-  #+end_src
+#+name: bash_counter
+#+begin_src sh :shebang #!/bin/bash
+echo '' > out.log
+for i in `seq 1 5`; do 
+echo "Writing! $i"
+echo "hello $i" >> out.log
+sleep $(($RANDOM % 5))
+done
+#+end_src
 
 - Count some numbers with ruby
 
-  #+begin_src ruby :shebang #!/usr/bin/ruby
-  sleep 0.2
-  10.times do |n|
-    puts "And now writing! #{n}"
-    File.open("out.log", "a") {|f| f.puts "Hello again #{n}" }
-    sleep rand.round(2)
-  end
-  #+end_src
+#+name: ruby_counter
+#+begin_src ruby :shebang #!/usr/bin/ruby
+$stdout.sync = true
+sleep 0.2
+10.times do |n|
+  puts "And now writing! #{n}"
+  File.open("out.log", "a") {|f| f.puts "Hello again #{n}" }
+  sleep rand.round(2)
+end
+#+end_src
 
 - Print some numbers with python
 
+#+name: python_counter
 #+begin_src python :shebang #!/usr/bin/python
 for i in range(0,3):
   print i
+#+end_src
+
+- Block that should not be run
+
+#+begin_src js
+{
+  "hello": "world"
+}
 #+end_src

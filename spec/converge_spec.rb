@@ -44,8 +44,7 @@ describe OrgConverge::Command do
 
     o = OrgConverge::Command.new({ 
                                    '<org_file>' => setup_file,
-                                   '--root-dir' => example_dir,
-                                   '--runmode'  => 'sequential'
+                                   '--root-dir' => example_dir
                                  })
     success = o.execute!
     success.should == true

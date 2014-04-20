@@ -14,7 +14,10 @@ module Orgmode
       # Feed the parsed contens and create the necessary internal structures
       # for doing babel like features
       output = ''
-      ob = BabelOutputBuffer.new(output)
+      babel_options = { 
+        :in_buffer_settings => @in_buffer_settings
+      }
+      ob = BabelOutputBuffer.new(output, babel_options)
       translate(@header_lines, ob)
       @headlines.each do |headline|
         translate(headline.body_lines, ob)
@@ -25,20 +28,8 @@ module Orgmode
   end
 end
 
-module StringWithColors
-  def red;            colorize("\e[0m\e[31m");  end
-  def green;          colorize("\e[0m\e[32m");  end
-  def yellow;         colorize("\e[0m\e[33m");  end
-  def blue;           colorize("\e[0m\e[34m");  end
-  def magenta;        colorize("\e[0m\e[35m"); end
-  def cyan;           colorize("\e[0m\e[36m"); end
-  def white;          colorize("\e[0m\e[37m"); end
-  def bright_black;   colorize("\e[0m\e[30m"); end
-  def bright_magenta; colorize("\e[0m\e[35m"); end
-  def bold;   colorize("\e[0m\e[1m");   end
-  def colorize(color_code); "#{color_code}#{self}\e[0m"; end
-end
-
-class String
-  include StringWithColors
-end
+require 'tco'
+conf = Tco.config
+conf.names["green"] = "#02a552"
+conf.names["red"]   = "#eb443b"
+Tco.reconfigure conf
