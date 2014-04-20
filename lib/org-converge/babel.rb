@@ -33,7 +33,6 @@ module Orgmode
         if not Dir.exists?(directory)
           begin
             if script[:header][:mkdirp] == 'true'
-              p script
               logger.info "Create dir for #{file} since it does not exists..."
               FileUtils.mkdir_p(File.dirname(file), :mode => 0755)
             else
