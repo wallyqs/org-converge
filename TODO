@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/7] > 0.0.9 version
+* [0/8] > 0.0.9 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
@@ -14,12 +14,14 @@
   : org-converge setupfile.org --dry-run
 - [ ] Use :eval for evaling blocks (off by default)
 - [ ] Can use :dir for running a process relative to that directory
-
-* [0/3] 0.0.6 version
-
-- [ ] Keyword to accumulate run blocks
-- [ ] Do not run commented blocks
 - [ ] Use rake task manager
+
+* [3/3] 0.0.6 version
+
+# - [ ] Keyword to accumulate run blocks
+- [X] Run specific blocks defined by name (using a regex expression)
+- [X] Change the format of the logger
+- [X] Do not run blocks in commented headlines
 
 * [2/2] 0.0.5 version
 
@@ -53,7 +55,7 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [3/19] Ideas
+* [3/20] Ideas
 ** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
 
 By default, this would be 0644, but we also need to specify the
@@ -65,6 +67,7 @@ hmm dont't like this syntax for folders
 
 Let's keep it simple and just use a babel block that shells out to create the directories
 until I can think of something better.
+** TODO Inject macros within the environment variables from a runnable process
 ** TODO Clarify which ones of the header arguments to implement
 
 http://orgmode.org/manual/Specific-header-arguments.html#Specific-header-arguments
