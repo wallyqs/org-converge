@@ -1,10 +1,11 @@
-#+TITLE: Installing some packages
+#+TITLE:   Installing some packages
+#+runmode: sequential
 
 * Just install some packages for example
 
-#~+name: install_build_essentials
+#+name: install_build_essentials
 #+begin_src sh
-sudo apt-get install build-essentials
+sudo apt-get install build-essential -y
 #+end_src
 
 Should be able to be run with something like:
