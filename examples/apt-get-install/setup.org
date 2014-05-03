@@ -2,6 +2,7 @@
 
 * Just install some packages for example
 
+#~+name: install_build_essentials
 #+begin_src sh
 sudo apt-get install build-essentials
 #+end_src

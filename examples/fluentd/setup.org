@@ -12,7 +12,9 @@ Fluentd can be installed either as a package from treasure data or
 just as a gem. In this example, we only install as a gem:
 
 # Fails because of permissions
-#+begin_src sh :shebang #!/bin/bash
+
+#+name: install_fluentd
+#+begin_src sh :shebang #!/bin/bash :before all
 gem list | grep fluentd
 fluentd_installed=$?
 if [ $fluentd_installed -ne 0 ]; then
@@ -53,6 +55,7 @@ to ~fluentd_filepath~.
 
 Send some logs:
 
+#+name: flush_logs
 #+begin_src ruby :shebang #!/usr/local/bin/ruby
 require 'fluent-logger'
 
@@ -70,12 +73,14 @@ end
 
 And yet another process which will be tailing the file that we are sending logs too:
 
+#+name: tail_logs
 #+begin_src sh :shebang #!/bin/bash
 tail -f here.*
 #+end_src
 
 * Start which was configured here 				      :start:
 
+#+name: fluentd_run
 #+begin_src bash :shebang #!/bin/bash
 fluentd -c fluentd.conf -vvv
 #+end_src

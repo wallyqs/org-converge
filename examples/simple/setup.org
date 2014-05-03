@@ -1,10 +1,11 @@
-#+TITLE: Simple example
+#+TITLE:   Simple tangle example
+#+runmode: sequential
 
 It does not get more simple than this:
 
-- First, configure something:
+First, configure something:
 
-  #+begin_src conf :tangle /tmp/my-conf
+#+begin_src conf :tangle /tmp/my-conf
 <source>
   bind 0.0.0.0
   port 4224
@@ -14,29 +15,31 @@ It does not get more simple than this:
   type file
   path /var/tmp/a.log
 </match>
-  #+end_src
+#+end_src
 
-- And then run something
+Then run something:
 
-  #+begin_src sh
+#+name: first_run
+#+begin_src sh
 echo "1) Hello world" > /tmp/my-echo
 echo "2) Hello world" > /tmp/my-echo
 echo "3) Hello world" > /tmp/my-echo
-  #+end_src
+#+end_src
 
-- Then configure something again
+Then configure something again:
 
-  #+begin_src sh
+#+name: second_run
+#+begin_src sh
 echo "4) Hello world" >> /tmp/my-echo
 echo "5) Hello world" >> /tmp/my-echo
 echo "6) Hello world" >> /tmp/my-echo
 
 echo "7) Hello world" >> /tmp/my-echo
-  #+end_src
+#+end_src
 
-- And send something to babel once again
+And send something to babel once again:
 
-  #+begin_src conf :tangle /tmp/hello-conf.yml
+#+begin_src conf :tangle /tmp/hello-conf.yml
 status_port: 9090
 no_tab_after_that: true
-  #+end_src
+#+end_src
