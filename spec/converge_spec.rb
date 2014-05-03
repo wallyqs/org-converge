@@ -44,7 +44,7 @@ describe OrgConverge::Command do
     o = OrgConverge::Command.new({ 
                                    '<org_file>' => setup_file,
                                    '--root-dir' => example_dir,
-                                   '--name'     => 'firs'
+                                   '--name'     => 'first'
                                  })
     success = o.execute!
     success.should == true
@@ -52,6 +52,21 @@ describe OrgConverge::Command do
     expected_contents = File.read(File.join(example_dir, 'same.log'))
     expected_contents.lines.count.should == 1
     expected_contents.should == "First block\n"
+  end
+
+  it "should run not commented blocks from 'commented_block' example" do
+    example_dir = File.join(EXAMPLES_DIR, 'commented_block')
+    setup_file = File.join(example_dir, 'run.org')
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir,
+                                 })
+    success = o.execute!
+    success.should == true
+
+    expected_contents = File.read(File.join(example_dir, 'output.log'))
+    expected_contents.lines.count.should == 2
+    expected_contents.should == "first\nthird\n"
   end
 
   it "should converge 'runlist_example' sequentially" do
