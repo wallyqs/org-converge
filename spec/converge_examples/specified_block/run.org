@@ -1,0 +1,21 @@
+# -*- mode: org -*-
+#+OPTIONS:	^:nil
+#+TITLE:	Runs specified blocks
+#+DATE:		2014-05-03
+#+STARTUP:	showeverything
+
+Considering that there are the following blocks defined:
+
+#+name: first_block
+#+begin_src sh
+echo "Running first block!"
+echo 'First block' > same.log
+#+end_src
+
+Second block:
+
+#+name: second_block
+#+begin_src sh
+echo "Running second block!"
+echo 'Second block' >> same.log
+#+end_src

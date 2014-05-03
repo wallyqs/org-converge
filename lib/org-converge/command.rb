@@ -37,8 +37,11 @@ module OrgConverge
 
     def converge!
       tangle!
-      if @options['--runmode']
+      case
+      when @options['--runmode']
         dispatch_runmode(@options['--runmode'])
+      when @options['--name']
+        run_matching_blocks!
       else
         # Try to find one in the buffer
         runmode = ob.in_buffer_settings['RUNMODE']
@@ -106,6 +109,22 @@ module OrgConverge
         @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
+      @engine.start
+      logger.info "Run has completed successfully.".fg 'green'
+    end
+
+    def run_matching_blocks!
+      @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+      babel.tangle_runnable_blocks!(@run_dir, :filter => @options['--name'])
+      scripts = babel.ob.scripts.select {|k, h| h[:header][:name] =~ Regexp.new(@options['--name']) }
+      scripts.each do |key, script|
+        file = File.expand_path("#{@run_dir}/#{key}")
+        cmd = "#{script[:lang]} #{file}"
+        display_name = script[:header][:name]
+        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+      end
+
+      logger.info "Running code blocks now! (#{scripts.count} runnable blocks found in total)"
       @engine.start
       logger.info "Run has completed successfully.".fg 'green'
     end

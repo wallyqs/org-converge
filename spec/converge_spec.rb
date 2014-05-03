@@ -38,6 +38,22 @@ describe OrgConverge::Command do
     expected_contents.lines.count.should == 16
   end
 
+  it "should run specified block from 'specified_block' example" do
+    example_dir = File.join(EXAMPLES_DIR, 'specified_block')
+    setup_file = File.join(example_dir, 'run.org')
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir,
+                                   '--name'     => 'firs'
+                                 })
+    success = o.execute!
+    success.should == true
+
+    expected_contents = File.read(File.join(example_dir, 'same.log'))
+    expected_contents.lines.count.should == 1
+    expected_contents.should == "First block\n"
+  end
+
   it "should converge 'runlist_example' sequentially" do
     example_dir = File.join(EXAMPLES_DIR, 'runlist_example')
     setup_file = File.join(example_dir, 'setup.org')

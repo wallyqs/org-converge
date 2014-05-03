@@ -64,7 +64,7 @@ module Orgmode
       logger.info "Tangling succeeded!"
     end
 
-    def tangle_runnable_blocks!(run_dir='run')
+    def tangle_runnable_blocks!(run_dir='run', options={})
       FileUtils.mkdir_p(run_dir)
 
       logger.info "Tangling #{ob.scripts.count} scripts within directory: #{run_dir}..."
