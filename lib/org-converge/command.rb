@@ -8,7 +8,6 @@ module OrgConverge
     def initialize(options)
       @options = options
       @dotorg  = options['<org_file>']
-      @logger  = Logger.new(options['--log'] || STDOUT)
       @root_dir = options['--root-dir']
       @run_dir  = if @root_dir
                     File.expand_path(File.join(@root_dir, 'run'))
@@ -17,6 +16,10 @@ module OrgConverge
                   end
       @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
       @babel = nil
+      @logger  = Logger.new(options['--log'] || STDOUT)
+      logger.formatter = proc do |severity, datetime, progname, msg| 
+        "[#{datetime.strftime('%Y-%m-%dT%H:%M:%S %z')}] #{msg}\n"
+      end
     end
 
     def execute!
