@@ -1,0 +1,43 @@
+#+TITLE:           Linked tasks example
+#+runmode:         tasks
+#+final_task:      final
+
+The goal here is to be able to define dependencies
+among blocks and run the correctly in that order.
+
+With ~:after first~, the ~second~ block becomes
+a prerequisite of the ~first~ block.
+
+#+name: second
+#+begin_src sh :after first
+for i in `seq 5 10`; do 
+  echo $i >> out.log
+done
+#+end_src
+
+#+name: first
+#+begin_src ruby
+5.times { |n| File.open("out.log", "a") {|f| f.puts n } }
+#+end_src
+
+Using ~:after all~ is special, since it means that the task
+depends on everything else having run already.
+
+#+name: final
+#+begin_src python :after second :results output
+print "Wrapping up with Python in the end"
+f = open('out.log', 'a')
+f.write('11')
+f.close()
+#+end_src
+
+The same with ~:before all~, this would be executed
+at the beginning.
+
+#+name: prologue
+#+begin_src sh :before first :results output
+echo "init" > out.log
+#+end_src
+
+Note: Both ~:before all~ and ~:after all~ get accumulated
+and are run sequentially after that.
