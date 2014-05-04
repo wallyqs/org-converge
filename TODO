@@ -2,19 +2,28 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/8] > 0.0.9 version
+* [0/7] > 0.0.9 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency
   + Do not do an operation unless it is required
   + Abort in case there was a failure in executing the script.
-- [ ] Support SETUPFILE
+  + This would work by using the ~:cache true~ to a block header argument
+- [ ] Support for ~#+SETUPFILE~
 - [ ] Heuristics for determining which binary to use for running the script
 - [ ] Display how the run would look like without making changes
   : org-converge setupfile.org --dry-run
 - [ ] Use :eval for evaling blocks (off by default)
 - [ ] Can use :dir for running a process relative to that directory
-- [ ] Use rake task manager
+
+* [0/1] 0.0.8 version
+
+- [ ] ~org-spec~ exploration
+
+* [2/2] 0.0.7 version
+
+- [X] Add ~org-run~ and ~org-tangle~ aliases
+- [X] Use rake task manager
 
 * [3/3] 0.0.6 version
 
@@ -55,37 +64,36 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [3/20] Ideas
-** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
+* [6/21] Ideas
+** TODO Chaining resources with ~#+NAME:~ directives and ~:notify~ argument
 
-By default, this would be 0644, but we also need to specify the
-user:group of it so the syntax would have to be:
+One idea is to be able to notify resources by naming the code blocks.
 
-#+begin_src conf :tangle etc/something/config/path :chmod 0664 :user td-agent :group
-hmm dont't like this syntax for folders
+Example: Here first the td-agent service would try to start,
+and if it succeeds, then it would execute the script defined in the
+~announce-availability~ resource.
+
+#+name: td-agent-start
+#+begin_src sh :notify announce-availability
+sudo service td-agent start
 #+end_src
 
-Let's keep it simple and just use a babel block that shells out to create the directories
-until I can think of something better.
+#+name: announce-availability
+#+begin_src sh
+sudo /etc/register-to-balancer
+#+end_src
+
+- Support for ~:before all~ and ~:after all~ added
+** TODO Add namespace dynamically to the tasks using an in buffer setting
+
+When including files there can be some potential scoping issues.
+
 ** TODO Inject macros within the environment variables from a runnable process
 ** TODO Clarify which ones of the header arguments to implement
 
 http://orgmode.org/manual/Specific-header-arguments.html#Specific-header-arguments
 
 ** TODO Use sshkit for running remote processes
-** TODO We don't need to create the directories in most cases (:mkdirp yes)
-
-Something like this is not required because the ~:tangle~ blocks
-would create the necessary directories behind the scenes.
-
-#+begin_src org
-  ,We need to prepare some directories for the configuration:
-  
-  ,#+begin_src converge
-  ,mkdir -p etc/fluentd/config
-  ,#+end_src
-#+end_src
-
 ** TODO By default, it should use current dir for tangling
 ** TODO Converging: Only do an operation when it didn't finish
 
@@ -130,24 +138,26 @@ fluentd:
 
 But need to 
 
-** TODO Using the :tags: to setup the things to run right away
+** TODO Choosing a templating language: default for now is mustache
 
-Kind of like the chef-solo runlist, a headline like this...
+We could implement the macro systems, but it seems that it may not be
+strong enough for providing with all the cases we may run into.
+** TODO Support caching?
 
-#+begin_src org
-  ,* Everything in its right place                                      :config:
-  
-  ,#+begin_src conf :tangle etc/this.yml
-  ,hello: "world"
-  ,#+end_src
+#+begin_src emacs-lisp :cache yes :exports results
+  (random)
 #+end_src
 
-...could be called like this
+#+RESULTS[db54597aed193d861d01bf92110e10f28f8f40d4]:
+: 842438499349743708
 
-#+begin_src sh
-org-converge fluentd.org -t config
+** TODO Support :eval ?
+
+#+begin_src sh :eval (print "Really doing this...")
+  echo "Going ahead with operation X!"
 #+end_src
 
+** DONE ~#+NAME:~ could be used in the logger for identifying the process
 ** DONE Managing dependencies: could be handled with ~#+include~ directives
 
 One idea is that it would be useful to compile different manuals
@@ -167,52 +177,58 @@ We should be able to express that dependency somehow:
 
 # But one problem, is that once I have included something, sometimes we
 # will want "reopen" the previous manuals?
+** DONE We don't need to create the directories in most cases (:mkdirp yes)
 
-** TODO Loading all the Org mode files first and then setup only one part
+Something like this is not required because the ~:tangle~ blocks
+would create the necessary directories behind the scenes.
+
+#+begin_src org
+  ,We need to prepare some directories for the configuration:
+  
+  ,#+begin_src converge
+  ,mkdir -p etc/fluentd/config
+  ,#+end_src
+#+end_src
+** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
+
+By default, this would be 0644, but we also need to specify the
+user:group of it so the syntax would have to be:
+
+#+begin_src conf :tangle etc/something/config/path :chmod 0664 :user td-agent :group
+hmm dont't like this syntax for folders
+#+end_src
+
+Let's keep it simple and just use a babel block that shells out to create the directories
+until I can think of something better.
+
+** CANCELED Using the :tags: to setup the things to run right away
+
+Using the block ~#+name~ instead.
+
+Kind of like the chef-solo runlist, a headline like this...
+
+#+begin_src org
+  ,* Everything in its right place                                      :config:
+  
+  ,#+begin_src conf :tangle etc/this.yml
+  ,hello: "world"
+  ,#+end_src
+#+end_src
+
+...could be called like this
+
+#+begin_src sh
+org-converge fluentd.org -t config
+#+end_src
+
+** CANCELED Loading all the Org mode files first and then setup only one part
+
+Used ~#+name~ from blocks instead.
 
 So maybe, each one of these tags would have to be namespaces under the
 name of the file:
 
 : org-converge logserver.org -t "fluentd::setup, fluentd::config, logserver::setup"
-
-** TODO Choosing a templating language: default for now is mustache
-
-We could implement the macro systems, but it seems that it may not be
-strong enough for providing with all the cases we may run into.
-
-** TODO Chaining resources with ~#+NAME:~ directives and ~:notify~ argument
-
-One idea is to be able to notify resources by naming the code blocks.
-
-Example: Here first the td-agent service would try to start,
-and if it succeeds, then it would execute the script defined in the
-~announce-availability~ resource.
-
-#+name: td-agent-start
-#+begin_src sh :notify announce-availability
-sudo service td-agent start
-#+end_src
-
-#+name: announce-availability
-#+begin_src sh
-sudo /etc/register-to-balancer
-#+end_src
-
-** DONE ~#+NAME:~ could be used in the logger for identifying the process
-** TODO Support caching?
-
-#+begin_src emacs-lisp :cache yes :exports results
-  (random)
-#+end_src
-
-#+RESULTS[db54597aed193d861d01bf92110e10f28f8f40d4]:
-: 842438499349743708
-
-** TODO Support :eval ?
-
-#+begin_src sh :eval (print "Really doing this...")
-  echo "Going ahead with operation X!"
-#+end_src
 
 * Links
 
