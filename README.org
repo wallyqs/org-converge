@@ -155,5 +155,5 @@ bundle install
 ** Contributing
 
 The project is in very early development at this moment, but if you
-feel that it is interesting enough, please create a ticket so start
+feel that it is interesting enough, please create a ticket to start
 the discussion.
