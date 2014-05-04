@@ -5,10 +5,10 @@ require 'org-converge'
 
 doc = <<OPTIONS
 
-org-converge: A light configuration management tool for Org mode
+org-tangle: Org babel tangling feature using the Org mode Ruby parser
 
 Usage:
-  org-converge <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--runmode=<runmode>] [--name=<block_name>]
+  org-tangle <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>]
 
 Options:
 
@@ -25,5 +25,5 @@ end
 
 exit 1 unless cmd
 
-o = OrgConverge::Command.new(cmd)
+o = OrgConverge::Command.new(cmd.merge({'--tangle' => true }))
 o.execute!
