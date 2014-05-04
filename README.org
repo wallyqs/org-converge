@@ -4,43 +4,50 @@
 * Org Converge
 ** Description
 
-  This attempts to be an experiment of using Org mode syntax to
-  describe, configure and setting up something, borrowing some ideas
-  of what is possible to do with tools like =chef-solo=, =puppet=,
-  =ansible=, etc...
+This attempts to be an experiment of using Org mode syntax to
+create documentable reproducible runs, borrowing some ideas
+of what is possible to do with tools like =chef-solo=,
+=rake=, =foreman=, etc...
 
 ** Motivation
 
-  The Org babel syntax has proven to be flexible enough to produce
-  /reproducible research/ papers. Then, I believe that configuring and setting up
-  a server for example is something that could be also be done using
-  the same syntax, given that /converging/ the configuration is something
-  that one ought to be able to reproduce.
+The Org babel syntax has proven to be flexible enough to produce
+/reproducible research/ papers. Then, I believe that configuring and setting up
+a server for example is something that could be also be done using
+the same syntax, given that /converging/ the configuration is something
+that one ought to be able to reproduce.
 
 ** Usage
 
-   To run the blocks in parallel:
+To run the blocks in parallel...
 
 #+begin_src sh
-org-converge path/to/setup-file.org
+org-converge path/to/setup-file.org --runmode=parallel
 #+end_src
 
-   Or sequentially:
+or sequentially...
 
 #+begin_src sh
 org-converge path/to/setup-file.org --runmode=sequential
 #+end_src
 
+By including ~:after~ or ~:before~ arguments to a block,
+it is possible to make the blocks depend on one another.
+
+#+begin_src sh
+org-converge path/to/setup-file.org --runmode=chained
+#+end_src
+
 ** Quick example
 
-   The following is an example of running 3 processes
-   in parallel by defining them as code blocks from 
-   an Org mode file:
+The following is an example of running 3 processes
+in parallel by defining them as code blocks from 
+an Org mode file:
 
 #+begin_src sh
   ,#+TITLE: Running Org babel processes in parallel
    
-  * Print with different languages
+  ,* Print with different languages
    　
   ,#+name: hello_from_bash
   ,#+begin_src sh :shebang #!/bin/bash
@@ -64,96 +71,82 @@ org-converge path/to/setup-file.org --runmode=sequential
   ,#+end_src   
 #+end_src
 
-  We store this in a file named =hello.org= and then run it as follows:
+We store this in a file named =hello.org= and then run it as follows:
 
 #+begin_src sh
 org-converge hello.org
 #+end_src
 
-  This would produce an output similar to the following:
+This would produce an output similar to the following:
 
 #+begin_src sh
-I, [2014-04-17T23:48:44.663545 #1710]  INFO -- : Tangling 0 files...
-I, [2014-04-17T23:48:44.663698 #1710]  INFO -- : Tangling succeeded!
-I, [2014-04-17T23:48:44.664829 #1710]  INFO -- : Running code blocks now! (4 runnable blocks found in total)
-I, [2014-04-17T23:48:44.762899 #1710]  INFO -- : hello_from_bash       (1711) -- started with pid 1711
-I, [2014-04-17T23:48:44.808717 #1710]  INFO -- : hello_from_ruby       (1712) -- started with pid 1712
-I, [2014-04-17T23:48:44.837878 #1710]  INFO -- : hello_from_python     (1713) -- started with pid 1713
-I, [2014-04-17T23:48:44.878336 #1710]  INFO -- :                       (1714) -- started with pid 1714
-I, [2014-04-17T23:48:44.879284 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
-I, [2014-04-17T23:48:44.882778 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
-I, [2014-04-17T23:48:44.883637 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
-I, [2014-04-17T23:48:45.778681 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
-I, [2014-04-17T23:48:45.792321 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
-I, [2014-04-17T23:48:45.882020 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
-I, [2014-04-17T23:48:46.787106 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
-I, [2014-04-17T23:48:46.793347 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
-I, [2014-04-17T23:48:46.883511 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
-I, [2014-04-17T23:48:47.794846 #1710]  INFO -- : hello_from_ruby       (1712) -- hello world from ruby
-I, [2014-04-17T23:48:47.796387 #1710]  INFO -- : hello_from_bash       (1711) -- hello world from bash
-I, [2014-04-17T23:48:47.884196 #1710]  INFO -- : hello_from_python     (1713) -- hello world from python
+[2014-05-04T19:23:40 +0900] Tangling 0 files...
+[2014-05-04T19:23:40 +0900] Tangling succeeded!
+[2014-05-04T19:23:40 +0900] Tangling 3 scripts within directory: /Users/mariko/repos/org-converge/run...
+[2014-05-04T19:23:40 +0900] Running code blocks now! (3 runnable blocks found in total)
+[2014-05-04T19:23:40 +0900] hello_from_bash       (4664) -- started with pid 4664
+[2014-05-04T19:23:40 +0900] hello_from_ruby       (4665) -- started with pid 4665
+[2014-05-04T19:23:40 +0900] hello_from_python     (4666) -- started with pid 4666
+[2014-05-04T19:23:40 +0900] hello_from_bash       (4664) -- hello world from bash
+[2014-05-04T19:23:41 +0900] hello_from_ruby       (4665) -- hello world from ruby
+[2014-05-04T19:23:41 +0900] hello_from_python     (4666) -- hello world from python
+[2014-05-04T19:23:42 +0900] hello_from_ruby       (4665) -- hello world from ruby
 #+end_src
 
 ** How it works
 
-  Org Converge uses an liberally extended version of Org Babel
-  features in order to give support for converging the configuration
-  of a server.
+Org Converge uses an liberally extended version of Org Babel
+features in order to give support for converging the configuration
+of a server.
 
-  For example, using Org Babel and macros we can easily spread config
-  files on a server by writing the following on a ~server.org~ file.
+For example, using Org Babel and macros we can easily spread config
+files on a server by writing the following on a ~server.org~ file.
 
-  #+begin_src sh
-    ,#+begin_src yaml :tangle /etc/component.yml
-    multitenant: false
-    status_port: 10004
-    ,#+end_src
-  #+end_src
+#+begin_src sh
+,#+begin_src yaml :tangle /etc/component.yml
+multitenant: false
+status_port: 10004
+,#+end_src
+#+end_src
 
-  And then configure it by running it as follows, (considering we have
-  the correct permissions for tangling at =/etc/component.yml=): 
+And then configure it by running it as follows, (considering we have
+the correct permissions for tangling at =/etc/component.yml=): 
 
-  #+begin_src sh
-  sudo org-converge server.org
-  #+end_src
+#+begin_src sh
+sudo org-converge server.org
+#+end_src
 
-  Next, let's say that we no only one want to set the configured templates,
-  but that we also want to install some packages. In that case, we
-  should be able to do the following:
+Next, let's say that we no only one want to set the configured templates,
+but that we also want to install some packages. In that case, we
+should be able to do the following:
 
-  #+begin_src sh
-  ,* Configuring the component
+#+begin_src sh
+,* Configuring the component
 
-  ,#+begin_src yaml :tangle /etc/component.yml
-  multitenant: false
-  status_port: 10004
-  ,#+end_src  
+,#+begin_src yaml :tangle /etc/component.yml
+multitenant: false
+status_port: 10004
+,#+end_src  
+
+,* Installing the dependencies
+
+Need the following so that ~bundle install~ can compile 
+the native extensions correctly.
+
+,#+begin_src sh
+apt-get install build-essentials -y
+,#+end_src
 　
-  ,* Installing the dependencies
+Then the following should work:
 　
-  Need the following so that ~bundle install~ can compile 
-  the native extensions correctly.
-　
-  ,#+begin_src sh
-  apt-get install build-essentials -y
-  ,#+end_src
-　
-  Then the following should work:
-　
-  ,#+begin_src sh
-  cd project_path
-  bundle install
-  ,#+end_src
-  #+end_src
-
-  As long as the repo has been already checked out in the directory, 
-  the previous example will succeed. 
-
-  More practical examples can be found [[https://github.com/wallyqs/org-converge/tree/master/examples][here]], more will be added as
-  long as dogfooding from this goes well.
+,#+begin_src sh
+cd project_path
+bundle install
+,#+end_src
+#+end_src
 
 ** Contributing
 
-  The project is in very early development at this moment, but if you
-  feel that it is interesting enough, please create a ticket so start
-  the discussion.
+The project is in very early development at this moment, but if you
+feel that it is interesting enough, please create a ticket so start
+the discussion.
