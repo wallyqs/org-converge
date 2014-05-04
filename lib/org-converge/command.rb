@@ -58,8 +58,8 @@ module OrgConverge
         run_blocks_in_parallel!
       when 'sequential'
         run_blocks_sequentially!
-      when 'runlist'
-        # TODO
+      when 'chained', 'chain', 'tasks'
+        run_blocks_chain!
       else # parallel by default
         run_blocks_in_parallel!
       end
@@ -69,6 +69,53 @@ module OrgConverge
       results = babel.tangle!
     rescue Orgmode::Babel::TangleError
       logger.error "Cannot converge because there were errors during tangle step".fg 'red'
+    end
+
+    def run_blocks_chain!
+      # Chain the blocks by defining them as Rake::Tasks dynamically
+      tasks = { }
+
+      babel.tangle_runnable_blocks!(@run_dir)
+      babel.ob.scripts.each do |key, script|
+        task_name = script[:header][:name]
+        next unless task_name
+
+        task = Rake::Task.define_task task_name do
+          with_running_engine do |engine|
+            file = File.expand_path("#{@run_dir}/#{key}")
+            cmd = "#{script[:lang]} #{file}"
+            engine.register task_name, cmd, { :cwd => @root_dir, :logger => logger }
+          end
+        end
+        tasks[task_name] = { 
+          :task => task,
+          :script => script
+        }
+      end
+
+      # Now onto define the prerequisites and actions
+      tasks.each_pair do |task_name, task_definition|
+        prerequisite_task = task_definition[:script][:header][:after]
+        if prerequisite_task and tasks[prerequisite_task]
+          task_definition[:task].prerequisites << tasks[prerequisite_task][:task]
+        end
+
+        postrequisite_task = task_definition[:script][:header][:before]
+        if postrequisite_task and tasks[postrequisite_task]
+          tasks[postrequisite_task][:task].prerequisites << task_definition[:task]
+        end
+      end
+
+      # The task that marks the run as done needs to be defined explicitly
+      # otherwise a block named default will tried to be run
+      final_task = babel.ob.in_buffer_settings['FINAL_TASK'] || 'default'
+
+      if tasks[final_task]
+        logger.info "Running final task: #{tasks[final_task][:task]}"
+        tasks[final_task][:task].invoke
+      else
+        logger.error "Could not find a final task to run!"
+      end
     end
 
     def run_blocks_sequentially!
@@ -96,8 +143,6 @@ module OrgConverge
       logger.info "Run has completed successfully.".fg 'green'
     end
 
-    # TODO: Too much foreman has made this running blocks in parallel the default behavior.
-    #       We should actually be supporting run lists instead, but liking this experiment so far.
     def run_blocks_in_parallel!
       @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
       babel.tangle_runnable_blocks!(@run_dir)

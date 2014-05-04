@@ -85,4 +85,24 @@ describe OrgConverge::Command do
     expected_contents = "first\nsecond\n"
     File.read(File.join(example_dir, 'out.log')).should == expected_contents
   end
+
+  it "should run 'linked_tasks' in order" do
+    example_dir = File.join(EXAMPLES_DIR, 'linked_tasks')
+    setup_file = File.join(example_dir, 'tasks.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir
+                                 })
+    success = o.execute!
+    success.should == true
+
+    File.executable?(File.join(example_dir, 'run/0')).should == true
+    File.executable?(File.join(example_dir, 'run/1')).should == true
+    File.executable?(File.join(example_dir, 'run/2')).should == true
+    File.executable?(File.join(example_dir, 'run/3')).should == true
+
+    expected_contents = "init\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11"
+    File.read(File.join(example_dir, 'out.log')).should == expected_contents
+  end
 end

@@ -1,3 +1,5 @@
+require 'rake'
+
 module Orgmode
   class BabelOutputBuffer < OutputBuffer
     attr_reader :tangle
@@ -11,11 +13,21 @@ module Orgmode
 
       # ~@tangle~ files are put in the right path
       # : @tangle['/path'] = [Lines]
-      @tangle  = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
+      @tangle  = Hash.new {|h,k| h[k] = {
+          :lines  => '',
+          :header => {},
+          :lang   => ''
+        }
+      }
 
       # ~@scripts~ are tangled in order and ran
       # : @scripts = [text, text, ...]
-      @scripts = Hash.new {|h,k| h[k] = {:lines => '', :header => {}, :lang => ''}}
+      @scripts = Hash.new {|h,k| h[k] = {
+          :lines  => '',
+          :header => {},
+          :lang   => ''
+        }
+      }
       @scripts_counter = 0
       @buffer = ''
     end
@@ -50,7 +62,9 @@ module Orgmode
           @scripts[@scripts_counter][:header] = { 
             :shebang => line.block_header_arguments[':shebang'],
             :mkdirp  => line.block_header_arguments[':mkdirp'],
-            :name    => line.properties['block_name']
+            :name    => line.properties['block_name'],
+            :before  => line.block_header_arguments[':before'],
+            :after   => line.block_header_arguments[':after']
           }
           @scripts[@scripts_counter][:lang] = line.block_lang
         # TODO: have a way to specify which are the default binaries to be used per language
