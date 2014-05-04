@@ -9,6 +9,10 @@ create documentable reproducible runs, borrowing some ideas
 of what is possible to do with tools like =chef-solo=,
 =rake=, =foreman=, etc...
 
+** Installing
+
+: gem install org-converge
+
 ** Motivation
 
 The Org babel syntax has proven to be flexible enough to produce
