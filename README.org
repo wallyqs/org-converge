@@ -2,6 +2,9 @@
 #+STARTUP:	showeverything
 
 * Org Converge
+
+[[https://secure.travis-ci.org/wallyqs/org-converge.png?branch=master]]
+
 ** Description
 
 This attempts to be an experiment of using Org mode syntax to
