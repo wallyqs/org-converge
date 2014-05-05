@@ -105,4 +105,30 @@ describe OrgConverge::Command do
     expected_contents = "init\n0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11"
     File.read(File.join(example_dir, 'out.log')).should == expected_contents
   end
+
+  it "should run 'expected_results' with src blocks" do
+    example_dir = File.join(EXAMPLES_DIR, 'expected_results')
+    setup_file = File.join(example_dir, 'spec.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir,
+                                   '--runmode'  => 'spec'
+                                 })
+    success = o.execute!
+    success.should == true
+  end
+
+  it "should run 'expected_results' with example blocks" do
+    example_dir = File.join(EXAMPLES_DIR, 'expected_results')
+    setup_file = File.join(example_dir, 'spec2.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir,
+                                   '--runmode'  => 'spec'
+                                 })
+    success = o.execute!
+    success.should == true
+  end
 end
