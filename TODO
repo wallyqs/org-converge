@@ -5,7 +5,7 @@
 * [0/7] > 0.0.9 version
 
 - [ ] Macros can be loaded and applied to the configuration
-- [ ] Actually support converging and idempotency
+- [ ] Actually support converging and idempotency (~--runmode=idempotent~)
   + Do not do an operation unless it is required
   + Abort in case there was a failure in executing the script.
   + This would work by using the ~:cache true~ to a block header argument
@@ -16,9 +16,9 @@
 - [ ] Use :eval for evaling blocks (off by default)
 - [ ] Can use :dir for running a process relative to that directory
 
-* [0/1] 0.0.8 version
+* [1/1] 0.0.8 version
 
-- [ ] ~org-spec~ exploration
+- [X] ~org-spec~ exploration!
 
 * [2/2] 0.0.7 version
 
