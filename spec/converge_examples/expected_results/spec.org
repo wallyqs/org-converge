@@ -8,7 +8,7 @@ are evaling into what is being documented in the results block.
 
 #+name: hello
 #+begin_src sh :results output code :exports both
-for i in `seq 12`; do 
+for i in `seq 20`; do 
 echo "hello"
 done
 #+end_src
@@ -27,29 +27,27 @@ hello
 hello
 hello
 hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
 #+END_SRC
 
 Something else.
 
 #+name: hola
 #+begin_src ruby :results output code :exports both
-20.times do 
+10.times do 
   puts "hola"
 end
 #+end_src
 
 #+RESULTS: hola
 #+BEGIN_SRC ruby
-hola
-hola
-hola
-hola
-hola
-hola
-hola
-hola
-hola
-hola
 hola
 hola
 hola

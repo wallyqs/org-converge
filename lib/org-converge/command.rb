@@ -213,8 +213,13 @@ module OrgConverge
     end
 
     def run_against_blocks_results!
-      babel.tangle_runnable_blocks!(@run_dir)
+      require 'diff/lcs'
+      require 'diff/lcs/hunk'
 
+      succeeded = []
+      failed    = []
+
+      logger.info "Runmode: spec"
       runlist_stack = []
       scripts = if @options['--name']
                   babel.ob.scripts.select {|k, h| h[:header][:name] =~ Regexp.new(@options['--name']) }
@@ -223,7 +228,9 @@ module OrgConverge
                 end
       scripts.each { |key, script| runlist_stack << [key, script] }
 
+      babel.tangle_runnable_blocks!(@run_dir)
       FileUtils.mkdir_p(@results_dir)
+
       while not runlist_stack.empty?
         key, script = runlist_stack.shift
 
@@ -231,11 +238,12 @@ module OrgConverge
         next unless script[:header][:name]
 
         display_name = script[:header][:name]
+        script_file  = File.expand_path("#{@run_dir}/#{key}")
+        results_file = File.expand_path("#{@results_dir}/#{key}")
+        cmd           = "#{script[:lang]} #{script_file}"
+
         with_running_engine(:runmode => 'spec', :results_dir => @results_dir) \
         do |engine|
-          script_file  = File.expand_path("#{@run_dir}/#{key}")
-          results_file = File.expand_path("#{@results_dir}/#{key}")
-          cmd = "#{script[:lang]} #{script_file}"
           engine.register display_name, cmd, { 
             :cwd     => @root_dir, 
             :logger  => logger,
@@ -243,9 +251,57 @@ module OrgConverge
           }
         end
 
-        # After the run is done, we match agains the results block
+        if scripts[:results]
+          # Do the diff comparison here
+          print "Checking results from '#{display_name.fg 'yellow'}' code block:\t"
+          expected_lines = script[:results].split("\n").map! {|e| e.chomp }
+          actual_lines   = File.open(results_file).read.split("\n").map! {|e| e.chomp }
+
+          output_diff = diff(expected_lines, actual_lines)
+          if output_diff.empty?
+            puts "OK".fg 'green'
+            succeeded << display_name
+          else
+            puts "DIFF".fg 'red'
+            puts output_diff.fg 'red'
+            failed << display_name
+          end
+        end
       end
-      logger.info "Run has completed successfully.".fg 'green'
+
+      puts "#{succeeded.count + failed.count} examples, #{failed.count} failures".fg 'green'
+      exit 1 if failed.count > 0
+    end
+
+    def diff(expected_lines, actual_lines)
+      output = ""
+      file_length_difference = 0
+
+      diffs = Diff::LCS.diff(expected_lines, actual_lines)
+      hunks = diffs.map do |piece|
+        Diff::LCS::Hunk.new(
+                            expected_lines, actual_lines, piece, 3, 0
+                            ).tap do |h|
+          file_length_difference = h.file_length_difference 
+        end
+      end
+
+      hunks.each_cons(2) do |prev_hunk, current_hunk|
+        begin
+          if current_hunk.overlaps?(prev_hunk)
+            current_hunk.merge(prev_hunk)
+          else
+            output << prev_hunk.diff(:unified).to_s
+          end
+        rescue => e
+        end
+      end
+
+      if hunks.last
+        output << hunks.last.diff(:unified).to_s
+      end
+
+      output
     end
 
     def with_running_engine(opts={})

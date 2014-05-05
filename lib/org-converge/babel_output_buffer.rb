@@ -25,8 +25,7 @@ module Orgmode
       @scripts = Hash.new {|h,k| h[k] = {
           :lines   => '',
           :header  => {},
-          :lang    => '',
-          :results => ''
+          :lang    => ''
         }
       }
       @scripts_counter = 0
@@ -93,7 +92,7 @@ module Orgmode
         # Fix indentation and remove fix commas from Org mode before flushing
         strip_code_block!
         if @accumulate_results_block
-          @scripts[@scripts_counter - 1][:results] << @buffer
+          @scripts[@scripts_counter - 1][:results] = @buffer
           @accumulate_results_block = false
         else
           @scripts[@scripts_counter][:lines] << @buffer
