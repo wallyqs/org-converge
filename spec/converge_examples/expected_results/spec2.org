@@ -26,7 +26,7 @@ This one would fail near christmas, outside of Japan,
 when the site is down, or there is a change in the rss.xml being provided.
 
 #+name: christmas_check
-#+begin_src sh :results output
+#+begin_src bash :results output
 curl https://isitchristmas.com/rss.xml 2> /dev/null | grep title
 # curl isitchristmastyet.com 2> /dev/null
 #+end_src

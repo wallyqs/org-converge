@@ -8,27 +8,27 @@
 ** Runnable blocks
 
 #+name: runnable_block_1
-#+begin_src sh :results output
+#+begin_src bash :results output
 echo "first" > output.log
 #+end_src
 
 ** COMMENT Non runnable blocks
 
 #+name: not_runnable_block_2
-#+begin_src sh :results output
+#+begin_src bash :results output
 echo "should not run" >> output.log
 #+end_src
 
 ** More runnable blocks
 
 #+name: runnable_block_3
-#+begin_src sh :results output
+#+begin_src bash :results output
 echo "third" >> output.log
 #+end_src
 
 *** COMMENT Not runnable block
 
 #+name: not_runnable_block_4
-#+begin_src sh :results output
+#+begin_src bash :results output
 echo "fourth" >> output.log
 #+end_src

@@ -5,7 +5,7 @@
 In this example, we will have scripts being chained one after another.
 
 #+name: first
-#+begin_src sh :shebang #!/bin/bash
+#+begin_src bash :shebang #!/bin/bash
 sleep 5
 echo "first" > out.log
 #+end_src
