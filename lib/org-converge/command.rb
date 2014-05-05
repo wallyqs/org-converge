@@ -252,7 +252,6 @@ module OrgConverge
         end
 
         if scripts[:results]
-          # Do the diff comparison here
           print "Checking results from '#{display_name.fg 'yellow'}' code block:\t"
           expected_lines = script[:results].split("\n").map! {|e| e.chomp }
           actual_lines   = File.open(results_file).read.split("\n").map! {|e| e.chomp }
@@ -267,6 +266,15 @@ module OrgConverge
             failed << display_name
           end
         end
+      end
+
+      if failed.count > 0
+        puts ''
+        puts 'Failed code blocks:'.fg 'red'
+        failed.each do |name|
+          puts "  - #{name.fg 'yellow'}"
+        end
+        puts ''
       end
 
       puts "#{succeeded.count + failed.count} examples, #{failed.count} failures".fg 'green'
