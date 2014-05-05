@@ -18,7 +18,7 @@ of what is possible to do with tools like =chef-solo=,
 
 ** Motivation
 
-The Org babel syntax has proven to be flexible enough to produce
+The Org babel syntax has proven to be flexible enough to writing
 /reproducible research/ papers. Then, I believe that configuring and setting up
 a server for example is something that could be also be done using
 the same syntax, given that /converging/ the configuration is something
@@ -45,7 +45,7 @@ it is possible to make the blocks depend on one another.
 org-converge path/to/setup-file.org --runmode=chained
 #+end_src
 
-Other commands available:
+*** Other commands available
 
 : org-run        # alias for org-converge
 : org-tangle     # just tangles the contents without running the blocks
