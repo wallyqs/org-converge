@@ -1,5 +1,6 @@
 #+TITLE:   Installing some packages
 #+runmode: sequential
+#+startup: showeverything
 
 * Just install some packages for example
 

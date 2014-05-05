@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/7] > 0.0.9 version
+* [0/9] > 0.0.10 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency (~--runmode=idempotent~)
@@ -14,9 +14,11 @@
 - [ ] Display how the run would look like without making changes
   : org-converge setupfile.org --dry-run
 - [ ] Use :eval for evaling blocks (off by default)
-- [ ] Can use :dir for running a process relative to that directory
+- [ ] Can use ~:dir~ for running a process relative to that directory
+- [ ] Bugfix for when results blocks have only inline examples or images
+- [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status
 
-* [1/1] 0.0.8 version
+* [1/1] 0.0.8, 0.0.9 version
 
 - [X] ~org-spec~ exploration!
 
