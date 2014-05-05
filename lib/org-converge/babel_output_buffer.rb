@@ -23,9 +23,10 @@ module Orgmode
       # ~@scripts~ are tangled in order and ran
       # : @scripts = [text, text, ...]
       @scripts = Hash.new {|h,k| h[k] = {
-          :lines  => '',
-          :header => {},
-          :lang   => ''
+          :lines   => '',
+          :header  => {},
+          :lang    => '',
+          :results => ''
         }
       }
       @scripts_counter = 0
@@ -77,10 +78,13 @@ module Orgmode
       end
 
       case
+      when (line.start_of_results_code_block?)
+        @accumulate_results_block = true
       when (line.assigned_paragraph_type == :code and @current_tangle)
         # Need to keep track of the current tangle to buffer its lines
         @tangle[@current_tangle][:lines] << line.output_text << "\n"
-      when (line.assigned_paragraph_type == :code)
+      when (line.assigned_paragraph_type == :code  or \
+            line.paragraph_type == :inline_example)
         # When a tangle is not going on, it means that the lines would go
         # into a runnable script
         @buffer << line.output_text << "\n"
@@ -88,7 +92,12 @@ module Orgmode
                                      line.assigned_paragraph_type == :code))
         # Fix indentation and remove fix commas from Org mode before flushing
         strip_code_block!
-        @scripts[@scripts_counter][:lines] << @buffer
+        if @accumulate_results_block
+          @scripts[@scripts_counter - 1][:results] << @buffer
+          @accumulate_results_block = false
+        else
+          @scripts[@scripts_counter][:lines] << @buffer
+        end
         @buffer = ''
         @scripts_counter += 1
       end

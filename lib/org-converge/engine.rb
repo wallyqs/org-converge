@@ -16,8 +16,9 @@ module OrgConverge
 
     def initialize(options={})
       super(options)
-      @logger = options[:logger] || Logger.new(STDOUT)
-      @babel  = options[:babel]
+      @logger  = options[:logger] || Logger.new(STDOUT)
+      @babel   = options[:babel]
+      @runmode = options[:runmode]
     end
 
     # We allow other processes to exit with 0 status
@@ -37,11 +38,16 @@ module OrgConverge
       @processes.each do |process|
         reader, writer = create_pipe
         begin
+          # In case of spec mode, we need to redirect the output to a results file instead
+          writer = File.open(process.options[:results], 'a') if @runmode == 'spec'
           pid = process.run(:output => writer)
           @names[process] = "#{@names[process]}.#{pid}"
-          writer.puts "started with pid #{pid}"
+
+          # NOTE: In spec mode we need to be more strict on what is flushed by the engine
+          # because we will be comparing the output
+          writer.puts "started with pid #{pid}" unless @runmode == 'spec'
         rescue Errno::ENOENT
-          writer.puts "unknown command: #{process.command}"
+          writer.puts "unknown command: #{process.command}" unless @runmode == 'spec'
         end
         @running[pid] = [process]
         @readers[pid] = reader
@@ -63,8 +69,9 @@ module OrgConverge
         output  = "#{pad_process_name(ps)}(#{pid})".fg get_color_for_pid(pid.to_i)
         output += " -- "
         output += message
-        # FIXME: When the process has stopped already,
-        # the name of the process does not appear
+
+        # FIXME: When the process has stopped already, the name of the process does not appear
+        #        (which means that this approach is wrong from the beginning probably)
         logger.info output
       end
     rescue Errno::EPIPE
@@ -86,7 +93,21 @@ module OrgConverge
     def get_color_for_pid(pid)
       RAINBOW[pid % 7]
     end
+
+    def watch_for_termination
+      pid, status = Process.wait2
+      output_with_mutex name_for(pid), termination_message_for(status) unless @runmode == 'spec'
+      @running.delete(pid)
+      yield if block_given?
+      pid
+    rescue Errno::ECHILD
+    end
   end
 
-  class CodeBlockProcess < Foreman::Process; end
+  # Need to expose the options to make the process be aware
+  # of the possible running mode (specially spec mode)
+  # and where to put the results output
+  class CodeBlockProcess < Foreman::Process
+    attr_reader :options
+  end
 end

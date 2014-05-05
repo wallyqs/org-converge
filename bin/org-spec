@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# -*- mode: ruby -*-
+require 'docopt'
+require 'org-converge'
+
+doc = <<OPTIONS
+
+org-spec: Validate whether code blocks match to the contents of the #+RESULTS block
+
+Usage:
+  org-spec <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--name=<block_name>]
+
+Options:
+
+  -h --help               Show this screen.
+
+OPTIONS
+
+begin
+  require "pp"
+  cmd = Docopt::docopt(doc)
+rescue Docopt::Exit => e
+  puts e.message
+end
+
+exit 1 unless cmd
+
+o = OrgConverge::Command.new(cmd.merge({ '--runmode' => 'spec' }))
+o.execute!

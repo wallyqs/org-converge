@@ -1,0 +1,64 @@
+# -*- mode: org; mode: auto-fill; -*-
+#+TITLE:   Expected results example
+#+runmode: spec
+
+Given a literate description of the run along with the expected
+results, we can try checking whether the contents from the code block
+are evaling into what is being documented in the results block.
+
+#+name: hello
+#+begin_src sh :results output code :exports both
+for i in `seq 12`; do 
+echo "hello"
+done
+#+end_src
+
+#+RESULTS: hello
+#+BEGIN_SRC sh
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+hello
+#+END_SRC
+
+Something else.
+
+#+name: hola
+#+begin_src ruby :results output code :exports both
+20.times do 
+  puts "hola"
+end
+#+end_src
+
+#+RESULTS: hola
+#+BEGIN_SRC ruby
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+#+END_SRC
+

@@ -6,14 +6,21 @@ module OrgConverge
     attr_reader :engine
 
     def initialize(options)
-      @options = options
-      @dotorg  = options['<org_file>']
-      @root_dir = options['--root-dir']
-      @run_dir  = if @root_dir
-                    File.expand_path(File.join(@root_dir, 'run'))
-                  else
-                    File.expand_path('run')
-                  end
+      @options   = options
+      @dotorg    = options['<org_file>']
+      @root_dir  = options['--root-dir']
+      @run_dir   = if @root_dir
+                     File.expand_path(File.join(@root_dir, 'run'))
+                   else
+                     File.expand_path('run')
+                   end
+      # The results dir will have a timestamp to avoid having to refresh all the time
+      results_dirname = "results_#{Time.now.strftime("%Y%m%d%H%M%S")}"
+      @results_dir = if @root_dir
+                       File.expand_path(File.join(@root_dir, results_dirname))
+                     else
+                       File.expand_path(results_dirname)
+                     end
       @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
       @babel = nil
       @logger  = Logger.new(options['--log'] || STDOUT)
@@ -40,14 +47,15 @@ module OrgConverge
 
     def converge!
       tangle!
+      runmode = @options['--runmode'] || ob.in_buffer_settings['RUNMODE']
       case
-      when @options['--runmode']
-        dispatch_runmode(@options['--runmode'])
       when @options['--name']
-        run_matching_blocks!
+        if runmode == 'sequentially'
+          run_matching_blocks_sequentially!
+        else
+          run_matching_blocks!
+        end
       else
-        # Try to find one in the buffer
-        runmode = ob.in_buffer_settings['RUNMODE']
         dispatch_runmode(runmode)
       end
     end
@@ -60,6 +68,8 @@ module OrgConverge
         run_blocks_sequentially!
       when 'chained', 'chain', 'tasks'
         run_blocks_chain!
+      when 'spec'
+        run_against_blocks_results!
       else # parallel by default
         run_blocks_in_parallel!
       end
@@ -177,8 +187,71 @@ module OrgConverge
       logger.info "Run has completed successfully.".fg 'green'
     end
 
-    def with_running_engine
-      engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
+    def run_matching_blocks_sequentially!
+      babel.tangle_runnable_blocks!(@run_dir)
+
+      runlist_stack = []
+      scripts = babel.ob.scripts.select {|k, h| h[:header][:name] =~ Regexp.new(@options['--name']) }
+      scripts.each do |key, script|
+        runlist_stack << [key, script]
+      end
+
+      while not runlist_stack.empty?
+        key, script = runlist_stack.shift
+
+        # Decision: Only run blocks which have a name
+        next unless script[:header][:name]
+
+        display_name = script[:header][:name]
+        with_running_engine do |engine|
+          file = File.expand_path("#{@run_dir}/#{key}")
+          cmd = "#{script[:lang]} #{file}"
+          engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+        end
+      end
+      logger.info "Run has completed successfully.".fg 'green'
+    end
+
+    def run_against_blocks_results!
+      babel.tangle_runnable_blocks!(@run_dir)
+
+      runlist_stack = []
+      scripts = if @options['--name']
+                  babel.ob.scripts.select {|k, h| h[:header][:name] =~ Regexp.new(@options['--name']) }
+                else
+                  babel.ob.scripts
+                end
+      scripts.each { |key, script| runlist_stack << [key, script] }
+
+      FileUtils.mkdir_p(@results_dir)
+      while not runlist_stack.empty?
+        key, script = runlist_stack.shift
+
+        # Decision: Only run blocks which have a name
+        next unless script[:header][:name]
+
+        display_name = script[:header][:name]
+        with_running_engine(:runmode => 'spec', :results_dir => @results_dir) \
+        do |engine|
+          script_file  = File.expand_path("#{@run_dir}/#{key}")
+          results_file = File.expand_path("#{@results_dir}/#{key}")
+          cmd = "#{script[:lang]} #{script_file}"
+          engine.register display_name, cmd, { 
+            :cwd     => @root_dir, 
+            :logger  => logger,
+            :results => results_file
+          }
+        end
+
+        # After the run is done, we match agains the results block
+      end
+      logger.info "Run has completed successfully.".fg 'green'
+    end
+
+    def with_running_engine(opts={})
+      default_options = { :logger => @logger, :babel => @babel }
+      options = default_options.merge!(opts)
+      engine = OrgConverge::Engine.new(options)
       yield engine
       engine.start
     end
