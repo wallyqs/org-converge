@@ -10,16 +10,16 @@ end
 
 #+RESULTS: hello_test
 #+begin_example
-hello
-hello
-hello
-hello
-hello
-hello
-hello
-hello
-hello
-hello
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
+hola
 #+end_example
 
 This one would fail near christmas, outside of Japan,
@@ -30,6 +30,21 @@ when the site is down, or there is a change in the rss.xml being provided.
 curl https://isitchristmas.com/rss.xml 2> /dev/null | grep title
 # curl isitchristmastyet.com 2> /dev/null
 #+end_src
+
+#+RESULTS: christmas_check
+#+begin_example
+    <title>Is It Christmas?</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+          <title>いいえ</title>
+#+end_example
 
 #+RESULTS: fetch_google
 #+begin_example
