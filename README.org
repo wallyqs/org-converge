@@ -18,15 +18,16 @@ of what is possible to do with tools like =chef-solo=,
 
 ** Motivation
 
-The Org babel syntax has proven to be flexible enough to writing
-/reproducible research/ papers. Then, I believe that configuring and setting up
+The Org babel syntax has proven to be flexible enough to write
+[[reproducible research papers][http://www.jstatsoft.org/v46/i03]]. 
+Then, I believe that a configuring and setting up
 a server for example is something that could be also be done using
-the same syntax, given that /converging/ the configuration is something
-that one ought to be able to reproduce.
+the same approach, given that /converging/ the configuration 
+is a run that one ought to be able to reproduce.
 
 ** Usage
 
-To run the blocks in parallel...
+To run the blocks in parallel:
 
 #+begin_src sh
 org-converge path/to/setup-file.org --runmode=parallel
@@ -47,10 +48,28 @@ org-converge path/to/setup-file.org --runmode=chained
 
 *** Other commands available
 
+: org-spec       # special kind of run which matches to results
 : org-run        # alias for org-converge
 : org-tangle     # just tangles the contents without running the blocks
 
-** Quick example
+** Examples
+
+First, we need to acknowledge that there are different kind of runs. 
+Currently there is support for the following:
+
+- runs where the blocks need to run sequentially (~--runmode=sequential~)
+  Each code block is part of a step to be ran
+  
+- runs where the blocks need to be run in parallel (~--runmode=parallel~)
+  One example of this is having what is supposed to be a distributed system running locally for development (where ~foreman~ would be used).
+  
+- runs where the blocks need to be run in sequence according to defined dependencies (--runmode=chained)
+  Set of runs that are usually covered by using something like rake, make, etc...
+
+- runs where the blocks are run and matched against the expected results for testing (~--runmode=spec~)
+  Each block is run and there is an assertion to check whether the contents in ~#+RESULTS~ block match
+
+*** Parallel runs
 
 The following is an example of running 3 processes
 in parallel by defining them as code blocks from 
@@ -58,20 +77,20 @@ an Org mode file:
 
 #+begin_src sh
   ,#+TITLE: Running Org babel processes in parallel
-   
+  　
   ,* Print with different languages
-   　
+   　　
   ,#+name: hello_from_bash
   ,#+begin_src sh :shebang #!/bin/bash
   while true; do echo "hello world from bash"; sleep 1; done
   ,#+end_src
-  　 
+　  　 
   ,#+name: hello_from_ruby
   ,#+begin_src ruby :shebang #!/usr/local/bin/ruby
   $stdout.sync = true
   loop { puts "hello world from ruby" ; sleep 1 }
   ,#+end_src
-  　 
+  　 　
   ,#+name: hello_from_python
   ,#+begin_src python :shebang #!/usr/bin/python
   import time
