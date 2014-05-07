@@ -61,7 +61,7 @@ org-spec path/to/file-spec.org
 
 ** How it works
 
-Org Converge uses an liberally extended version of Org Babel
+Org Converge uses a liberally extended version of Org Babel
 features in order to give support for converging the configuration
 of a server.
 
