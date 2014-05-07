@@ -20,10 +20,10 @@ of what is possible to do with tools like =chef-solo=,
 
 The Org babel syntax has proven to be flexible enough to write
 [[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
-Then, I believe that a configuring and setting up
+Then, I believe that configuring and setting up
 a server for example is something that could be also be done using
 the same approach, given that /converging/ the configuration 
-is a run that one ought to be able to reproduce.
+is a kind of run that one ought to be able to reproduce.
 
 ** Usage
 
@@ -140,6 +140,43 @@ This would produce an output similar to the following:
 [2014-05-04T19:23:41 +0900] hello_from_ruby       (4665) -- hello world from ruby
 [2014-05-04T19:23:41 +0900] hello_from_python     (4666) -- hello world from python
 [2014-05-04T19:23:42 +0900] hello_from_ruby       (4665) -- hello world from ruby
+#+end_src
+
+*** Spec mode
+
+In case the Org mode file has a results block which represents the expected result, 
+there is an ~org-spec~ command which can be useful to check whether there is change.
+For example, given the following file stored in ~test.org~:
+
+#+begin_src org
+  ,#+TITLE:   Expected results example
+  
+  ,#+name: hello_test
+  ,#+begin_src ruby :results output
+  ,10.times do 
+  ,  puts "hola"
+  ,end
+  ,#+end_src
+  
+  ,#+RESULTS: hello_test
+  ,#+begin_example
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,hola
+  ,#+end_example
+#+end_src
+
+We can be able to verify whether this works by running ~org-spec test.org~
+
+#+begin_src sh
+Checking results from 'hello' code block:	OK
 #+end_src
 
 ** How it works
