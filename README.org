@@ -79,11 +79,11 @@ Currently there is support for the following:
 Besides being able to specify which kind of run to use through an option, it is also possible 
 to define this within the Org mode file itself as an in buffer setting:
 
-#+begin_src sh
+#+begin_src org
   ,#+TITLE:   Defining the runmode as an in buffer setting 
   ,#+runmode: sequential
    Hello world
-#+end
+#+end_src
 
 In case of the spec running mode
 
