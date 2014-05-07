@@ -227,10 +227,33 @@ For example, given the following file stored in ~test.org~:
   ,#+end_example
 #+end_src
 
-We can be able to verify whether this works by running ~org-spec test.org~
+We can be able to verify whether this is still correct by running ~org-spec test.org~
 
 #+begin_src sh
 Checking results from 'hello' code block:	OK
+#+end_src
+
+As an example, let's say that the behavior of the original code block changed, and now says hello 5 times instead. 
+In that case the output would be as follows:
+
+#+begin_src diff
+Checking results from 'hola' code block:	DIFF
+@@ -1,11 +1,6 @@
+-hola
+-hola
+-hola
+-hola
+-hola
+-hola
+-hola
+-hola
+-hola
+-hola
++hello
++hello
++hello
++hello
++hello
 #+end_src
 
 ** Contributing
