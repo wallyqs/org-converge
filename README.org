@@ -117,15 +117,19 @@ First, we need to acknowledge that there are different kind of runs.
 Currently there is support for the following:
 
 - runs where the blocks need to run sequentially (~--runmode=sequential~)
+  
   Each code block is part of a step to be ran
   
 - runs where the blocks need to be run in parallel (~--runmode=parallel~)
+  
   One example of this is having what is supposed to be a distributed system running locally for development (where ~foreman~ would be used).
   
 - runs where the blocks need to be run in sequence according to defined dependencies (--runmode=chained)
+  
   Set of runs that are usually covered by using something like rake, make, etc...
 
 - runs where the blocks are run and matched against the expected results for testing (~--runmode=spec~)
+  
   Each block is run and there is an assertion to check whether the contents in ~#+RESULTS~ block match
 
 Besides being able to specify which kind of run to use through an option, it is also possible 
