@@ -200,26 +200,26 @@ For example, given the following file stored in ~test.org~:
 
 #+begin_src sh
   ,#+TITLE:   Expected results example
-  
+  　
   ,#+name: hello_test
   ,#+begin_src ruby :results output
   10.times do 
     puts "hola"
   end
   ,#+end_src
-  
+  　
   ,#+RESULTS: hello_test
   ,#+begin_example
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
-  ,hola
+  hola
+  hola
+  hola
+  hola
+  hola
+  hola
+  hola
+  hola
+  hola
+  hola
   ,#+end_example
 #+end_src
 
