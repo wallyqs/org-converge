@@ -46,6 +46,13 @@ it is possible to make the blocks depend on one another.
 org-converge path/to/setup-file.org --runmode=chained
 #+end_src
 
+In case the blocks have results blocks, it is possible to run
+the blocks and matched against the results with the ~org-spec~ helper command:
+
+#+begin_src sh
+org-spec path/to/file-spec.org
+#+end_src
+
 *** Other commands available
 
 : org-spec       # special kind of run which matches to results
@@ -68,6 +75,17 @@ Currently there is support for the following:
 
 - runs where the blocks are run and matched against the expected results for testing (~--runmode=spec~)
   Each block is run and there is an assertion to check whether the contents in ~#+RESULTS~ block match
+
+Besides being able to specify which kind of run to use through an option, it is also possible 
+to define this within the Org mode file itself as an in buffer setting:
+
+#+begin_src sh
+  ,#+TITLE:   Defining the runmode as an in buffer setting 
+  ,#+runmode: sequential
+   Hello world
+#+end
+
+In case of the spec running mode
 
 *** Parallel runs
 
@@ -105,7 +123,7 @@ an Org mode file:
 We store this in a file named =hello.org= and then run it as follows:
 
 #+begin_src sh
-org-converge hello.org
+org-run hello.org
 #+end_src
 
 This would produce an output similar to the following:
