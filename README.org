@@ -19,7 +19,7 @@ of what is possible to do with tools like =chef-solo=,
 ** Motivation
 
 The Org babel syntax has proven to be flexible enough to write
-[[reproducible research papers][http://www.jstatsoft.org/v46/i03]]. 
+[[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
 Then, I believe that a configuring and setting up
 a server for example is something that could be also be done using
 the same approach, given that /converging/ the configuration 
