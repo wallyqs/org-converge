@@ -63,9 +63,10 @@ org-spec path/to/file-spec.org
 
 Org Converge uses a liberally extended version of Org Babel
 features in order to give support for converging the configuration
-of a server.
+of a server, and the [[https://github.com/wallyqs/org-ruby][Ruby implementation of the Org mode parser]] 
+which makes integrating with useful Ruby tools like foreman, rake, rspec and ohai more straightforward.
 
-For example, using Org Babel and macros we can easily spread config
+For example, using Org Babel we can easily spread config
 files on a server by writing the following on a ~server.org~ file.
 
 #+begin_src sh
@@ -85,30 +86,51 @@ sudo org-converge server.org
 Next, let's say that we no only one want to set the configured templates,
 but that we also want to install some packages. In that case, we
 should be able to do the following:
+(Note: Currently, only named blocks would be run)
 
 #+begin_src sh
-,* Configuring the component
-
+,** Configuring the component
+　
 ,#+begin_src yaml :tangle /etc/component.yml
 multitenant: false
 status_port: 10004
 ,#+end_src  
 
-,* Installing the dependencies
+,** Installing the dependencies
 
 Need the following so that ~bundle install~ can compile 
 the native extensions correctly.
-
+ 
+# Giving the block a name would make it run
+　
+,#+name: build_essentials
 ,#+begin_src sh
 apt-get install build-essentials -y
 ,#+end_src
 　
 Then the following should work:
 　
+,#+name: bundle_install　
 ,#+begin_src sh
 cd project_path
 bundle install
 ,#+end_src
+#+end_src
+
+Since we are using Org mode syntax, it is possible to reuse this setup file by including it.
+
+#+begin_src sh
+,#+TITLE: Another setup
+
+Include the code blocks from the server into this:
+,#+include: "server.org"
+
+,#+name: install_org_mode
+,#+begin_src sh
+apt-get install org-mode -y
+,#+end_src
+#+end_src
+
 #+end_src
 
 ** Examples
@@ -205,14 +227,14 @@ For example, given the following file stored in ~test.org~:
 #+begin_src sh
   ,#+TITLE:   Expected results example
   　
-  ,#+name: hello_test
+  ,#+name: hello
   ,#+begin_src ruby :results output
   10.times do 
     puts "hola"
   end
   ,#+end_src
   　
-  ,#+RESULTS: hello_test
+  ,#+RESULTS: hello
   ,#+begin_example
   hola
   hola
@@ -237,7 +259,7 @@ As an example, let's say that the behavior of the original code block changed, a
 In that case the output would be as follows:
 
 #+begin_src diff
-Checking results from 'hola' code block:	DIFF
+Checking results from 'hello' code block:	DIFF
 @@ -1,11 +1,6 @@
 -hola
 -hola
