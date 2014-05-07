@@ -21,7 +21,7 @@ of what is possible to do with tools like =chef-solo=,
 The Org babel syntax has proven to be flexible enough to write
 [[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
 Then, I believe that configuring and setting up
-a server for example is something that could be also be done using
+a server for example, is something that could also be done using
 the same approach, given that /converging/ the configuration 
 is a kind of run that one ought to be able to reproduce.
 
@@ -131,7 +131,7 @@ Currently there is support for the following:
 - runs where the blocks are run and matched against the expected results for testing (~--runmode=spec~) ::
   
   Each block is run and there is an assertion to check whether the contents in ~#+RESULTS~ block match
-
+  
 Besides being able to specify which kind of run to use through an option, it is also possible 
 to define this within the Org mode file itself as an in buffer setting:
 
