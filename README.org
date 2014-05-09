@@ -7,7 +7,7 @@
 
 ** Description
 
-This attempts to be an experiment of using Org mode syntax to
+This is an experiment of using Org mode to
 create documentable reproducible runs, borrowing some ideas
 of what is possible to do with tools like =chef-solo=,
 =rake=, =foreman=, etc...
@@ -18,7 +18,7 @@ of what is possible to do with tools like =chef-solo=,
 
 ** Motivation
 
-The Org babel syntax has proven to be flexible enough to write
+The [[http://orgmode.org/worg/org-contrib/babel/Org Babel[Org Babel]] has proven to be flexible enough to write
 [[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
 Then, I believe that configuring and setting up
 a server for example, is something that could also be done using
@@ -55,7 +55,6 @@ org-spec path/to/file-spec.org
 
 *** Other commands available
 
-: org-spec       # special kind of run which matches to results
 : org-run        # alias for org-converge
 : org-tangle     # just tangles the contents without running the blocks
 
