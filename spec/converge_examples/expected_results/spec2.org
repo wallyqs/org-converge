@@ -34,29 +34,14 @@ curl https://isitchristmas.com/rss.xml 2> /dev/null | grep title
 #+RESULTS: christmas_check
 #+begin_example
     <title>Is It Christmas?</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-#+end_example
-
-#+RESULTS: fetch_google
-#+begin_example
-    <title>Is It Christmas?</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
-          <title>いいえ</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
+          <title>NO</title>
 #+end_example
