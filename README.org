@@ -159,7 +159,6 @@ to define this within the Org mode file itself as an in buffer setting:
 #+begin_src org
   ,#+TITLE:   Defining the runmode as an in buffer setting 
   ,#+runmode: sequential
-   Hello world
 #+end_src
 
 *** Parallel runs
