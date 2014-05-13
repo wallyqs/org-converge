@@ -18,7 +18,7 @@ of what is possible to do with tools like =chef-solo=,
 
 ** Motivation
 
-The [[http://orgmode.org/worg/org-contrib/babel/Org Babel[Org Babel]] has proven to be flexible enough to write
+The [[http://orgmode.org/worg/org-contrib/babel/Org Babel][Org Babel]] has proven to be flexible enough to write
 [[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
 Then, I believe that configuring and setting up
 a server for example, is something that could also be done using
