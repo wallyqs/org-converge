@@ -134,8 +134,7 @@ apt-get install org-mode -y
 
 ** Examples
 
-First, we need to acknowledge that there are different kind of runs. 
-Currently there is support for the following:
+Currently there is support for the following kind of runs:
 
 - runs where the blocks need to run sequentially (~--runmode=sequential~) ::
   
