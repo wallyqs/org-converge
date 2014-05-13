@@ -215,6 +215,12 @@ This would produce an output similar to the following:
 [2014-05-04T19:23:42 +0900] hello_from_ruby       (4665) -- hello world from ruby
 #+end_src
 
+Also possible to specify the name of the block to be ran:
+
+#+begin_src sh
+org-run hello.org --name from_ruby
+#+end_src
+
 *** Spec mode
 
 In case the Org mode file has a results block which represents the expected result, 
