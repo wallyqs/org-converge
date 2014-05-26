@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/9] > 0.0.10 version
+* [0/9] 0.1.0 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency (~--runmode=idempotent~)
@@ -17,6 +17,10 @@
 - [ ] Can use ~:dir~ for running a process relative to that directory
 - [ ] Bugfix for when results blocks have only inline examples or images
 - [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status
+
+* [1/1]   0.0.10
+
+- [X] Add ~:procs~ to code blocks to identify how many times it should run
 
 * [1/1] 0.0.8, 0.0.9 version
 
