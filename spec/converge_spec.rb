@@ -119,7 +119,7 @@ describe OrgConverge::Command do
     success.should == true
   end
 
-  it "should run 'expected_results' with example blocks" do
+  pending "should run 'expected_results' with example blocks" do
     example_dir = File.join(EXAMPLES_DIR, 'expected_results')
     setup_file = File.join(example_dir, 'spec2.org')
 
