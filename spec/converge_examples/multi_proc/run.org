@@ -1,0 +1,347 @@
+#+TITLE:   Sequential and Distributed runs to solve Problem #4 from Project Euler, written in Org mode Babel mode
+#+startup: showeverything
+
+[[https://projecteuler.net/problem=4][Problem #4]] from Project Euler reads as follows:
+
+#+begin_quote
+A palindromic number reads the same both ways. 
+The largest palindrome made from the product of two 2-digit numbers is 9009 = 91 × 99.
+Find the largest palindrome made from the product of two 3-digit numbers.
+#+end_quote
+
+We can notice the following from the problem:
+
+- The definition of a palindrome :: 
+     Can be implemented considering that the reverse list of chars should be identical to the original list.
+
+- There is exponential growth :: 
+     We look for the largest palindrome in the range of 3 digit numbers (100 - 999). 
+     For this, we iterate 2 times on the range, multiply the entries and make the palindrome check.
+
+*** First implementation: Sequential run to find the largest palindrome
+
+A straightforward implementation of the problem is by iterating twice
+over the same range and grabbing the highest largest number:
+
+#+name: sequential_palindrome_check
+#+begin_src ruby :results output
+require 'benchmark'
+
+def palindrome_check(number)
+  digits = number.to_s.split('').map(&:to_i)
+  reverse_is_equal = digits == digits.reverse ? true : false
+
+  reverse_is_equal
+end
+
+SMALLEST_NUMBER = 100
+LARGEST_NUMBER  = 999
+
+last_palindrome = 0
+last_x = 0
+last_y = 0
+bm = Benchmark.measure do
+  SMALLEST_NUMBER.upto(LARGEST_NUMBER).each do |i|
+    SMALLEST_NUMBER.upto(LARGEST_NUMBER).each do |j|
+
+      product = i * j
+      is_palindrome = palindrome_check(product)
+      if is_palindrome and product > last_palindrome
+        last_palindrome = product 
+        last_x = i
+        last_y = j
+      end
+    end
+  end
+end
+
+puts "The largest palindrome within this range is: #{last_palindrome} (x: #{last_x}, y: #{last_y}) and it took #{bm}"
+#+end_src
+
+#+RESULTS:
+: The largest palindrome within this range is: 906609 (x: 913, y: 993) and it took 16.36000
+
+For 3 digits, this approach seems like good enough. But what if we
+want to find out the largest palindrome number with 4 digits? Since
+growth is exponential, running this in a single process will take a
+while to finish.
+
+*** Second implementation: Distributed parallel run to find the largest palindrome
+
+One way to improve things is to parallelize the computation and
+coordinating the aggregation of the results by using a message
+bus. Borrowing [[http://blog.gopheracademy.com/plumbing-and-semantics][an idea]] in this case we use [[http://blog.gopheracademy.com/plumbing-and-semantics][NATS]].
+
+The approach to take here will be:
+
+- Split the ranges in subranges according to the number of subscribers
+- Make each one of the subscribers do the computation for us and emit
+  the response with the results
+- Collect the responses and identify the smallest, largest palindrome
+  within the range
+
+For this run, we will have 10 checkers doing the calculation in
+parallel, and one process collecting the replies.
+
+#+name: dist_palindrome_checks_aggregator
+#+begin_src ruby
+# palindrome_checks_aggregator.rb
+require 'nats/client'
+require 'json'
+
+sleep 6 # Wait for the checkers to be ready before sending compute requests
+$stdout.sync = true
+["TERM", "INT"].each { |sig| trap(sig) { NATS.stop } }
+
+MIN_RANGE = 100
+MAX_RANGE = 999
+CHECKERS  = 10
+
+@checkers_responses = 0
+@palindromes = []
+
+NATS.start {
+  # Stop running at the same time as the nats-server
+  EM.add_timer(40) { NATS.stop; exit 0 }
+  NATS.subscribe('palindromes-check.responses') do |msg, reply, sub|
+    palindromes_computation = JSON.parse(msg)
+    puts "Thanks, got: #{palindromes_computation['palindromes_found'].count} palindromes."
+    @palindromes << palindromes_computation['palindromes_found'].flatten
+    @checkers_responses += 1
+
+    total    = @palindromes.flatten.count
+    smallest = @palindromes.flatten.min
+    largest  = @palindromes.flatten.max
+    puts ">>>> So far we have found #{total} palindromes between #{MIN_RANGE} and #{MAX_RANGE}"
+    puts ">>>> The smallest one is #{smallest}"
+    puts ">>>> The largest  one is #{largest}"
+    File.open('result', 'w') {|f| f.puts largest }
+  end
+
+  balanced_check = MAX_RANGE / CHECKERS
+
+  ranges = []
+  min_range = MIN_RANGE
+  begin
+    next_min_range = min_range + balanced_check
+    ranges << [min_range, next_min_range - 1]
+    min_range = next_min_range
+  end while min_range < MAX_RANGE
+
+  ranges.each do |range|
+    range_start  = range.first
+    range_finish = [range.last, MAX_RANGE].min
+    range_info = {'start' => range_start, 'upto' => range_finish, 'min' => MIN_RANGE, 'max' => MAX_RANGE}
+
+    # Only want one checker to respond to this
+    NATS.request('palindromes-check.requests', nil, :max => 1) do |response|
+      checker_info = JSON.parse(response)
+      puts "Sending compute request to: #{checker_info}: #{range_info}"
+      NATS.publish("palindromes-check.#{checker_info['checker_id']}.compute", range_info.to_json) do
+        puts "Registered: #{range_info} to be done by #{checker_info['checker_id']}."
+      end
+    end
+    
+  end
+}
+#+end_src
+
+And each one of the checkers, has code as the one below to be able to
+announce itself. Setting ~:procs 10~ to match the number of checkers
+in the aggregator.
+
+#+name: dist_palindrome_checker
+#+begin_src ruby :procs 10
+# palindrome_checker.rb
+require 'nats/client'
+require 'securerandom'
+require 'json'
+
+sleep 4 # wait a little before the server starts
+$stdout.sync = true
+
+CHECKER_ID = SecureRandom.uuid
+CHECKER_INFO = {'checker_id' => CHECKER_ID }
+
+@offerings = 0
+@palindromes = []
+
+def palindrome_check(number)
+  digits = number.to_s.split('').map(&:to_i)
+  reverse_is_equal = digits == digits.reverse ? true : false
+
+  reverse_is_equal
+end
+
+def compute_palindromes_in_range(range_info)
+  range = JSON.parse(range_info)
+
+  range_min   = range['min']
+  range_max   = range['max']
+  range_start = range['start']
+  range_upto  = range['upto']
+
+  range_min.upto(range_max) do |i|
+    # Split this subrange among other checkers
+    range_start.upto(range_upto) do |j|
+      product = i * j
+      is_palindrome = palindrome_check(product)
+      @palindromes << product if is_palindrome
+    end
+  end
+
+  results = {'palindromes_found' => @palindromes }
+
+  results
+end
+
+NATS.start do 
+  puts "[#{CHECKER_ID}] Ready for requests"
+  NATS.subscribe('palindromes-check.requests') do |msg, reply, sub|
+    EM.add_timer(@offerings) { NATS.publish(reply, CHECKER_INFO.to_json) }
+    @offerings += 1
+  end
+
+  NATS.subscribe("palindromes-check.#{CHECKER_ID}.compute") do |msg, reply, sub| 
+    puts "Start working on: #{msg}"
+    results = compute_palindromes_in_range(msg)
+    @offerings -= 1
+    NATS.publish("palindromes-check.responses", results.to_json) do
+      puts "I'm done then."
+      NATS.stop
+      exit 0
+    end
+  end
+end
+#+end_src
+
+**** Starting the run
+
+Ruby implementation of NATS can be installed with:
+
+#+begin_src sh
+gem list | grep nats.*0.5.0.beta.12
+[ $? -ne 0 ] && gem install nats --pre
+#+end_src
+
+And we execute the run as follows:
+
+#+name: dist_nats_server_daemon
+#+begin_src bash
+# timeout nats in 30 seconds
+(bundle exec nats-server) & sleep 40; kill $! 2> /dev/null || :
+#+end_src
+
+: palindrome_checks_aggregator.rb &
+: for i in `seq 1 10`; do
+: ruby palindrome_checker.rb &
+: done
+
+Or since this Gist is also written in literate Org mode style, it can be run as follows:
+
+: gem install org-converge
+: org-run palindromes.org
+
+Sample output from this would look like this:
+
+#+begin_src sh
+[2014-05-27T04:40:51 +0900] Tangling 0 files...
+[2014-05-27T04:40:51 +0900] Tangling succeeded!
+[2014-05-27T04:40:51 +0900] Tangling 7 scripts within directory: /Users/mariko/Dropbox/repos/org-converge/run...
+[2014-05-27T04:40:51 +0900] Running code blocks now! (7 runnable blocks found in total)
+[2014-05-27T04:40:52 +0900] sequential_palindrome_check            (87486) -- started with pid 87486
+[2014-05-27T04:40:52 +0900] dist_palindrome_checks_aggregator      (87487) -- started with pid 87487
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-0              (87489) -- started with pid 87489
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-1              (87491) -- started with pid 87491
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-2              (87493) -- started with pid 87493
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-3              (87494) -- started with pid 87494
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-4              (87496) -- started with pid 87496
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-5              (87498) -- started with pid 87498
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-6              (87499) -- started with pid 87499
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-7              (87500) -- started with pid 87500
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-8              (87501) -- started with pid 87501
+[2014-05-27T04:40:52 +0900] dist_palindrome_checker-9              (87502) -- started with pid 87502
+[2014-05-27T04:40:52 +0900] dist_nats_server_daemon                (87503) -- started with pid 87503
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-0              (87489) -- [dc401559-c0c8-450b-a0fd-f2093b0f59e0] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-7              (87500) -- [7624024f-1be8-4962-aad6-aa2ae8366f0e] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-1              (87491) -- [218a8813-d5e9-4bc0-a206-c12ac5086126] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-4              (87496) -- [69b2b618-8a67-40c1-bf5a-988077a49251] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-8              (87501) -- [1e11550a-d609-461e-8ec6-9eae82c27ac6] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-2              (87493) -- [d1148625-360a-49ff-bd4d-257fecd9e7d6] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-5              (87498) -- [e72b34e7-22ff-42e0-9d6b-92aa26e15ace] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-3              (87494) -- [2f2b4180-3fcf-4461-8b59-632fdd5236a7] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-6              (87499) -- [d5129048-0994-4cd3-9cae-44c0d394de1e] Ready for requests
+[2014-05-27T04:41:00 +0900] dist_palindrome_checker-9              (87502) -- [5c2b3866-41dd-4338-9c28-343d28291853] Ready for requests
+[2014-05-27T04:41:02 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"dc401559-c0c8-450b-a0fd-f2093b0f59e0"}: {"start"=>100, "upto"=>198, "min"=>100, "max"=>999}
+[2014-05-27T04:41:02 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>100, "upto"=>198, "min"=>100, "max"=>999} to be done by dc401559-c0c8-450b-a0fd-f2093b0f59e0.
+[2014-05-27T04:41:02 +0900] dist_palindrome_checker-0              (87489) -- Start working on: {"start":100,"upto":198,"min":100,"max":999}
+[2014-05-27T04:41:03 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"7624024f-1be8-4962-aad6-aa2ae8366f0e"}: {"start"=>199, "upto"=>297, "min"=>100, "max"=>999}
+[2014-05-27T04:41:03 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>199, "upto"=>297, "min"=>100, "max"=>999} to be done by 7624024f-1be8-4962-aad6-aa2ae8366f0e.
+[2014-05-27T04:41:03 +0900] dist_palindrome_checker-7              (87500) -- Start working on: {"start":199,"upto":297,"min":100,"max":999}
+[2014-05-27T04:41:04 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"218a8813-d5e9-4bc0-a206-c12ac5086126"}: {"start"=>298, "upto"=>396, "min"=>100, "max"=>999}
+[2014-05-27T04:41:04 +0900] dist_palindrome_checker-1              (87491) -- Start working on: {"start":298,"upto":396,"min":100,"max":999}
+[2014-05-27T04:41:04 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>298, "upto"=>396, "min"=>100, "max"=>999} to be done by 218a8813-d5e9-4bc0-a206-c12ac5086126.
+[2014-05-27T04:41:05 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"1e11550a-d609-461e-8ec6-9eae82c27ac6"}: {"start"=>397, "upto"=>495, "min"=>100, "max"=>999}
+[2014-05-27T04:41:05 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>397, "upto"=>495, "min"=>100, "max"=>999} to be done by 1e11550a-d609-461e-8ec6-9eae82c27ac6.
+[2014-05-27T04:41:05 +0900] dist_palindrome_checker-8              (87501) -- Start working on: {"start":397,"upto":495,"min":100,"max":999}
+[2014-05-27T04:41:06 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"d1148625-360a-49ff-bd4d-257fecd9e7d6"}: {"start"=>496, "upto"=>594, "min"=>100, "max"=>999}
+[2014-05-27T04:41:06 +0900] dist_palindrome_checker-2              (87493) -- Start working on: {"start":496,"upto":594,"min":100,"max":999}
+[2014-05-27T04:41:06 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>496, "upto"=>594, "min"=>100, "max"=>999} to be done by d1148625-360a-49ff-bd4d-257fecd9e7d6.
+[2014-05-27T04:41:07 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"69b2b618-8a67-40c1-bf5a-988077a49251"}: {"start"=>595, "upto"=>693, "min"=>100, "max"=>999}
+[2014-05-27T04:41:07 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>595, "upto"=>693, "min"=>100, "max"=>999} to be done by 69b2b618-8a67-40c1-bf5a-988077a49251.
+[2014-05-27T04:41:07 +0900] dist_palindrome_checker-4              (87496) -- Start working on: {"start":595,"upto":693,"min":100,"max":999}
+[2014-05-27T04:41:08 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"d5129048-0994-4cd3-9cae-44c0d394de1e"}: {"start"=>694, "upto"=>792, "min"=>100, "max"=>999}
+[2014-05-27T04:41:08 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>694, "upto"=>792, "min"=>100, "max"=>999} to be done by d5129048-0994-4cd3-9cae-44c0d394de1e.
+[2014-05-27T04:41:08 +0900] dist_palindrome_checker-6              (87499) -- Start working on: {"start":694,"upto":792,"min":100,"max":999}
+[2014-05-27T04:41:09 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"e72b34e7-22ff-42e0-9d6b-92aa26e15ace"}: {"start"=>793, "upto"=>891, "min"=>100, "max"=>999}
+[2014-05-27T04:41:09 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>793, "upto"=>891, "min"=>100, "max"=>999} to be done by e72b34e7-22ff-42e0-9d6b-92aa26e15ace.
+[2014-05-27T04:41:09 +0900] dist_palindrome_checker-5              (87498) -- Start working on: {"start":793,"upto":891,"min":100,"max":999}
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 658 palindromes.
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 658 palindromes between 100 and 999
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 180081
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"2f2b4180-3fcf-4461-8b59-632fdd5236a7"}: {"start"=>892, "upto"=>990, "min"=>100, "max"=>999}
+[2014-05-27T04:41:10 +0900] dist_palindrome_checker-3              (87494) -- Start working on: {"start":892,"upto":990,"min":100,"max":999}
+[2014-05-27T04:41:10 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>892, "upto"=>990, "min"=>100, "max"=>999} to be done by 2f2b4180-3fcf-4461-8b59-632fdd5236a7.
+[2014-05-27T04:41:11 +0900] dist_palindrome_checks_aggregator      (87487) -- Sending compute request to: {"checker_id"=>"dc401559-c0c8-450b-a0fd-f2093b0f59e0"}: {"start"=>991, "upto"=>999, "min"=>100, "max"=>999}
+[2014-05-27T04:41:11 +0900] dist_palindrome_checks_aggregator      (87487) -- Registered: {"start"=>991, "upto"=>999, "min"=>100, "max"=>999} to be done by dc401559-c0c8-450b-a0fd-f2093b0f59e0.
+[2014-05-27T04:41:11 +0900] dist_palindrome_checker-0              (87489) -- Start working on: {"start":991,"upto":999,"min":100,"max":999}
+[2014-05-27T04:41:12 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 662 palindromes.
+[2014-05-27T04:41:12 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 1320 palindromes between 100 and 999
+[2014-05-27T04:41:12 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:12 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:14 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 422 palindromes.
+[2014-05-27T04:41:14 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 1742 palindromes between 100 and 999
+[2014-05-27T04:41:14 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:14 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:16 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 287 palindromes.
+[2014-05-27T04:41:16 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2029 palindromes between 100 and 999
+[2014-05-27T04:41:16 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:16 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:18 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 265 palindromes.
+[2014-05-27T04:41:18 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2294 palindromes between 100 and 999
+[2014-05-27T04:41:18 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:18 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 204 palindromes.
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2498 palindromes between 100 and 999
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 175 palindromes.
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2673 palindromes between 100 and 999
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:20 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 162 palindromes.
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2835 palindromes between 100 and 999
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 154 palindromes.
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 2989 palindromes between 100 and 999
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:21 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:22 +0900] dist_palindrome_checks_aggregator      (87487) -- Thanks, got: 139 palindromes.
+[2014-05-27T04:41:22 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> So far we have found 3128 palindromes between 100 and 999
+[2014-05-27T04:41:22 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The smallest one is 10201
+[2014-05-27T04:41:22 +0900] dist_palindrome_checks_aggregator      (87487) -- >>>> The largest  one is 906609
+[2014-05-27T04:41:34 +0900] sequential_palindrome_check            (87486) -- The largest palindrome within this range is: 906609 (x: 913, y: 993) and it took  18.470000   0.270000  18.740000 ( 38.710531)
+[2014-05-27T04:41:34 +0900] sequential_palindrome_check            (87486) -- exited with code 0
+#+end_src

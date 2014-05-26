@@ -131,4 +131,18 @@ describe OrgConverge::Command do
     success = o.execute!
     success.should == true
   end
+
+  it "should run 'multi_proc' with the same number of defined :procs" do
+    example_dir = File.join(EXAMPLES_DIR, 'multi_proc')
+    setup_file = File.join(example_dir, 'run.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir
+                                 })
+    success = o.execute!
+    success.should == true
+    largest = File.open("#{example_dir}/result").read
+    largest.should == "906609\n"
+  end
 end

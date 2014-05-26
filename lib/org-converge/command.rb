@@ -163,8 +163,7 @@ module OrgConverge
         # Decision: Only run blocks which have a name
         next unless script[:header][:name]
 
-        display_name = script[:header][:name]
-        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+        run_procs(script, cmd)
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
       @engine.start
@@ -178,8 +177,7 @@ module OrgConverge
       scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
         cmd = "#{script[:lang]} #{file}"
-        display_name = script[:header][:name]
-        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+        run_procs(script, cmd)
       end
 
       logger.info "Running code blocks now! (#{scripts.count} runnable blocks found in total)"
@@ -281,6 +279,7 @@ module OrgConverge
       exit 1 if failed.count > 0
     end
 
+    private
     def diff(expected_lines, actual_lines)
       output = ""
       file_length_difference = 0
@@ -333,6 +332,19 @@ module OrgConverge
       ob.scripts.each do |index, block|
         puts "---------- script: #{index} to be run with: #{block[:header][:shebang]} --------------".fg 'green'
         puts block[:lines]
+      end
+    end
+
+    def run_procs(script, cmd)
+      display_name = script[:header][:name]
+      if script[:header][:procs]
+        procs = script[:header][:procs].to_i
+        procs.times do |i|
+          proc_name = "#{display_name}-#{i}"
+          @engine.register proc_name, cmd, { :cwd => @root_dir, :logger => logger }
+        end
+      else
+        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
       end
     end
   end
