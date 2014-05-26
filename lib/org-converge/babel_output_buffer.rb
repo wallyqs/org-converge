@@ -64,7 +64,8 @@ module Orgmode
             :mkdirp  => line.block_header_arguments[':mkdirp'],
             :name    => line.properties['block_name'],
             :before  => line.block_header_arguments[':before'],
-            :after   => line.block_header_arguments[':after']
+            :after   => line.block_header_arguments[':after'],
+            :procs   => line.block_header_arguments[':procs'],
           }
           @scripts[@scripts_counter][:lang] = line.block_lang
         # TODO: have a way to specify which are the default binaries to be used per language
