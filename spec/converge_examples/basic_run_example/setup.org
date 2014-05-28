@@ -6,7 +6,7 @@ with all output being flushed to the screen.
 - Count some numbers with bash
 
 #+name: bash_counter
-#+begin_src bash :shebang #!/bin/bash
+#+begin_src sh :shebang #!/bin/bash
 echo '' > out.log
 for i in `seq 1 5`; do 
 echo "Writing! $i"

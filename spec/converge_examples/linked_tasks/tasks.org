@@ -9,7 +9,7 @@ With ~:after first~, the ~second~ block becomes
 a prerequisite of the ~first~ block.
 
 #+name: second
-#+begin_src bash :after first
+#+begin_src sh :after first
 for i in `seq 5 10`; do 
   echo $i >> out.log
 done
@@ -35,7 +35,7 @@ The same with ~:before all~, this would be executed
 at the beginning.
 
 #+name: prologue
-#+begin_src bash :before first :results output
+#+begin_src sh :before first :results output
 echo "init" > out.log
 #+end_src
 
