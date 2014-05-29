@@ -180,7 +180,7 @@ module OrgConverge
       scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
         bin = determine_lang_bin(script)
-        cmd = "#{bin} #{script}"
+        cmd = "#{bin} #{file}"
         run_procs(script, cmd)
       end
 
