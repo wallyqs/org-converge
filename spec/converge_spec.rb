@@ -106,7 +106,7 @@ describe OrgConverge::Command do
     File.read(File.join(example_dir, 'out.log')).should == expected_contents
   end
 
-  it "should run 'expected_results' with src blocks" do
+  pending "should run 'expected_results' with src blocks" do
     example_dir = File.join(EXAMPLES_DIR, 'expected_results')
     setup_file = File.join(example_dir, 'spec.org')
 
