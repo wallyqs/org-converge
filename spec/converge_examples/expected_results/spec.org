@@ -7,7 +7,7 @@ results, we can try checking whether the contents from the code block
 are evaling into what is being documented in the results block.
 
 #+name: hello
-#+begin_src bash :results output code :exports both
+#+begin_src sh :results output code :exports both
 for i in `seq 20`; do 
 echo "hello"
 done
