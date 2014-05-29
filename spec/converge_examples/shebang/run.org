@@ -1,0 +1,24 @@
+#+title: Free style shebang usage
+#+runmode :sequential
+
+#+name: ruby20
+#+begin_src ruby :shebang #!~/.rvm/rubies/ruby-2.0.0-p353/bin/ruby :results output code
+puts RUBY_VERSION
+#+end_src
+
+#+RESULTS: ruby20
+#+BEGIN_SRC ruby
+2.0.0
+#+END_SRC
+
+#+name: ruby193
+#+begin_src ruby :shebang #!~/.rvm/rubies/ruby-1.9.3-p0/bin/ruby :results output code
+puts RUBY_VERSION
+#+end_src
+
+#+RESULTS: ruby193
+#+BEGIN_SRC ruby
+1.9.3
+#+END_SRC
+
+.

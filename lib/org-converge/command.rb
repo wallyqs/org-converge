@@ -93,7 +93,8 @@ module OrgConverge
         task = Rake::Task.define_task task_name do
           with_running_engine do |engine|
             file = File.expand_path("#{@run_dir}/#{key}")
-            cmd = "#{script[:lang]} #{file}"
+            bin = determine_lang_bin(script)
+            cmd = "#{bin} #{file}"
             engine.register task_name, cmd, { :cwd => @root_dir, :logger => logger }
           end
         end
@@ -146,7 +147,8 @@ module OrgConverge
         display_name = script[:header][:name]
         with_running_engine do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
-          cmd = "#{script[:lang]} #{file}"
+          bin = determine_lang_bin(script)
+          cmd = "#{bin} #{file}"
           engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
         end
       end
@@ -158,7 +160,8 @@ module OrgConverge
       babel.tangle_runnable_blocks!(@run_dir)
       babel.ob.scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
-        cmd = "#{script[:lang]} #{file}"
+        bin = determine_lang_bin(script)
+        cmd = "#{bin} #{file}"
 
         # Decision: Only run blocks which have a name
         next unless script[:header][:name]
@@ -176,7 +179,8 @@ module OrgConverge
       scripts = babel.ob.scripts.select {|k, h| h[:header][:name] =~ Regexp.new(@options['--name']) }
       scripts.each do |key, script|
         file = File.expand_path("#{@run_dir}/#{key}")
-        cmd = "#{script[:lang]} #{file}"
+        bin = determine_lang_bin(script)
+        cmd = "#{bin} #{script}"
         run_procs(script, cmd)
       end
 
@@ -203,7 +207,8 @@ module OrgConverge
         display_name = script[:header][:name]
         with_running_engine do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
-          cmd = "#{script[:lang]} #{file}"
+          bin = determine_lang_bin(script)
+          cmd = "#{bin} #{file}"
           engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
         end
       end
@@ -238,7 +243,8 @@ module OrgConverge
         display_name = script[:header][:name]
         script_file  = File.expand_path("#{@run_dir}/#{key}")
         results_file = File.expand_path("#{@results_dir}/#{key}")
-        cmd           = "#{script[:lang]} #{script_file}"
+        bin = determine_lang_bin(script)
+        cmd = "#{bin} #{script_file}"
 
         with_running_engine(:runmode => 'spec', :results_dir => @results_dir) \
         do |engine|
@@ -345,6 +351,14 @@ module OrgConverge
         end
       else
         @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+      end
+    end
+
+    def determine_lang_bin(script)
+      if script[:header][:shebang]
+        script[:header][:shebang].gsub('#!', '')
+      else
+        script[:lang]
       end
     end
   end
