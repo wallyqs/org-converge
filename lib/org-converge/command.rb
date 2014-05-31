@@ -42,6 +42,7 @@ module OrgConverge
       true
     rescue => e
       @logger.error e
+      @logger.error e.backtrace.join("\n")
       false
     end
 
