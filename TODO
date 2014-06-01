@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/9] 0.1.0 version
+* [0/10] 0.1.0 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency (~--runmode=idempotent~)
@@ -17,8 +17,48 @@
 - [ ] Can use ~:dir~ for running a process relative to that directory
 - [ ] Bugfix for when results blocks have only inline examples or images
 - [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status
+- [ ] Bugfixes for spec run
 
-* [1/1]   0.0.10
+* [0/5] 0.0.14
+
+- [ ] Distributed run helpers for the header arguments
+  : ssh
+- [ ] =:waits:=
+  Wait for other processes to start before starting.
+  The process does not start until the alive signal to the following
+  list of processes succeeds.
+- [ ] =:awaits:=
+  Wait for other processes to finish before starting.
+- [ ] =:onerror=
+  aborteverything, restart, runhandler
+- [ ] =:assertedby=
+
+* [2/2] 0.0.13
+
+- [X] =:waitsfor=, =:waitfor=, =:sleep:=
+  The process starts after this delay
+- [X] =:timeoutin=, =:timeout=
+
+  The process stops running after this time
+
+* [1/1] 0.0.12
+
+- [X] Use the shebang for the binary
+
+#+begin_src ruby :results output
+cmd = "#!/bin/bash".gsub('#!', '')
+
+puts cmd
+#+end_src
+
+#+RESULTS:
+: /bin/bash
+
+* [1/1] 0.0.11
+
+- [X] Normalize the binaries used for some languages (bash, node)
+
+* [1/1] 0.0.10
 
 - [X] Add ~:procs~ to code blocks to identify how many times it should run
 
