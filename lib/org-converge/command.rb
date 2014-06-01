@@ -150,7 +150,7 @@ module OrgConverge
           file = File.expand_path("#{@run_dir}/#{key}")
           bin = determine_lang_bin(script)
           cmd = "#{bin} #{file}"
-          run_procs(script, cmd)
+          run_procs(script, cmd, engine)
         end
       end
       logger.info "Run has completed successfully.".fg 'green'
