@@ -144,6 +144,7 @@ module OrgConverge
   # Need to expose the options to make the process be aware
   # of the possible running mode (specially spec mode)
   # and where to put the results output
+  require 'timeout'
   class CodeBlockProcess < Foreman::Process
     attr_reader :options
 
@@ -152,21 +153,27 @@ module OrgConverge
       output = options[:output] || $stdout
       runner = "#{Foreman.runner}".shellescape      
 
-      # Build the list
+      # whitelist the modifiers which manipulate how to the block is started
       block_modifiers = { }
       if options[:header]
-        block_modifiers[:waitfor] = options[:header][:waitsfor] || options[:header][:waitfor]
+        block_modifiers[:waitfor] = options[:header][:waitsfor]  || options[:header][:waitfor] || options[:header][:sleep]
+        block_modifiers[:timeout] = options[:header][:timeoutin] || options[:header][:timeout] || options[:header][:timeoutafter]
       end
 
       pid     = nil
       thread  = nil
       process = nil
 
-      if block_modifiers[:waitfor]
+      if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout])
         thread = Thread.new do
-          sleep block_modifiers[:waitfor].to_i
-          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
-          pid = Process.spawn env, wrapped_command, :out => output, :err => output
+          waitfor = block_modifiers[:waitfor].to_i
+          timeout = block_modifiers[:timeout].to_i
+          process = proc do
+            sleep waitfor if waitfor > 0
+            wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
+            pid = Process.spawn env, wrapped_command, :out => output, :err => output
+          end
+          timeout > 0 ? Timeout::timeout(timeout, &process) : process.call
         end
       else    
         if Foreman.windows?

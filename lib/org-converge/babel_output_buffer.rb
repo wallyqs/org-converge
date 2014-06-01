@@ -45,13 +45,20 @@ module Orgmode
     def insert(line)
       # We try to get the lang from #+BEGIN_SRC and #+BEGIN_EXAMPLE blocks
       if line.begin_block?
+        block_header_arguments = { }
+        line.block_header_arguments.each_pair do |k, v|
+          if k.class == Symbol
+            block_header_arguments[k] = v
+          else
+            new_key = k.gsub(':', '').to_sym
+            block_header_arguments[new_key] = v
+          end
+        end
+
         case
-        when line.block_header_arguments[':tangle']
-          @current_tangle = line.block_header_arguments[':tangle']
-          @tangle[@current_tangle][:header] = {
-            :shebang => line.block_header_arguments[':shebang'],
-            :mkdirp  => line.block_header_arguments[':mkdirp']
-          }
+        when block_header_arguments[:tangle]
+          @current_tangle = block_header_arguments[:tangle]
+          @tangle[@current_tangle][:header] = block_header_arguments
           @tangle[@current_tangle][:lang] = line.block_lang
         when line.properties['block_name']
           # unnamed blocks are not run
@@ -59,18 +66,10 @@ module Orgmode
           @buffer = ''
 
           # Need to keep track of the options from a block before running it
-          @scripts[@scripts_counter][:header] = { 
-            :shebang  => line.block_header_arguments[':shebang'],
-            :mkdirp   => line.block_header_arguments[':mkdirp'],
-            :name     => line.properties['block_name'],
-            :before   => line.block_header_arguments[':before'],
-            :after    => line.block_header_arguments[':after'],
-            :procs    => line.block_header_arguments[':procs'],
-            :waitsfor => line.block_header_arguments[':waitsfor'],
-            :waitfor  => line.block_header_arguments[':waitfor']
-          }
+          @scripts[@scripts_counter][:header] = block_header_arguments
+          @scripts[@scripts_counter][:header][:name] = line.properties['block_name']
           @scripts[@scripts_counter][:lang] = normalize_lang(line.block_lang)
-          
+
         # TODO: have a way to specify which are the default binaries to be used per language
         # when binary_detected?(@block_lang)
         else

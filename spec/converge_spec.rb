@@ -157,6 +157,6 @@ describe OrgConverge::Command do
     success = o.execute!
     success.should == true
     result = File.open("#{example_dir}/out.log").read
-    result.should == "whoosh\n1\n2\n3\n4\n5\n"
+    result.should == "whoosh\n1\n2\n3\n4\n"
   end
 end

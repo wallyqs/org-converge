@@ -150,7 +150,7 @@ module OrgConverge
           file = File.expand_path("#{@run_dir}/#{key}")
           bin = determine_lang_bin(script)
           cmd = "#{bin} #{file}"
-          engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+          run_procs(script, cmd)
         end
       end
       logger.info "Run has completed successfully.".fg 'green'
