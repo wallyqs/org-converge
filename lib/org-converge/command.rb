@@ -82,7 +82,7 @@ module OrgConverge
       logger.error "Cannot converge because there were errors during tangle step".fg 'red'
     end
 
-    def run_blocks_chain!
+    def run_blocks_chain!      
       # Chain the blocks by defining them as Rake::Tasks dynamically
       tasks = { }
 
@@ -96,7 +96,7 @@ module OrgConverge
             file = File.expand_path("#{@run_dir}/#{key}")
             bin = determine_lang_bin(script)
             cmd = "#{bin} #{file}"
-            engine.register task_name, cmd, { :cwd => @root_dir, :logger => logger }
+            run_procs(script, cmd, engine)
           end
         end
         tasks[task_name] = { 
@@ -160,13 +160,12 @@ module OrgConverge
       @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
       babel.tangle_runnable_blocks!(@run_dir)
       babel.ob.scripts.each do |key, script|
-        file = File.expand_path("#{@run_dir}/#{key}")
-        bin = determine_lang_bin(script)
-        cmd = "#{bin} #{file}"
-
         # Decision: Only run blocks which have a name
         next unless script[:header][:name]
 
+        file = File.expand_path("#{@run_dir}/#{key}")
+        bin = determine_lang_bin(script)
+        cmd = "#{bin} #{file}"
         run_procs(script, cmd)
       end
       logger.info "Running code blocks now! (#{babel.ob.scripts.count} runnable blocks found in total)"
@@ -342,16 +341,17 @@ module OrgConverge
       end
     end
 
-    def run_procs(script, cmd)
+    def run_procs(script, cmd, engine=nil)
+      engine ||= @engine
       display_name = script[:header][:name]
       if script[:header][:procs]
         procs = script[:header][:procs].to_i
-        procs.times do |i|
-          proc_name = "#{display_name}-#{i}"
-          @engine.register proc_name, cmd, { :cwd => @root_dir, :logger => logger }
+        1.upto(procs) do |i|
+          proc_name = "#{display_name}:#{i}"
+          engine.register proc_name, cmd, { :cwd => @root_dir, :logger => logger,  :header => script[:header] }
         end
       else
-        @engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+        engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger, :header => script[:header] }
       end
     end
 

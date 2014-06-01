@@ -60,12 +60,14 @@ module Orgmode
 
           # Need to keep track of the options from a block before running it
           @scripts[@scripts_counter][:header] = { 
-            :shebang => line.block_header_arguments[':shebang'],
-            :mkdirp  => line.block_header_arguments[':mkdirp'],
-            :name    => line.properties['block_name'],
-            :before  => line.block_header_arguments[':before'],
-            :after   => line.block_header_arguments[':after'],
-            :procs   => line.block_header_arguments[':procs'],
+            :shebang  => line.block_header_arguments[':shebang'],
+            :mkdirp   => line.block_header_arguments[':mkdirp'],
+            :name     => line.properties['block_name'],
+            :before   => line.block_header_arguments[':before'],
+            :after    => line.block_header_arguments[':after'],
+            :procs    => line.block_header_arguments[':procs'],
+            :waitsfor => line.block_header_arguments[':waitsfor'],
+            :waitfor  => line.block_header_arguments[':waitfor']
           }
           @scripts[@scripts_counter][:lang] = normalize_lang(line.block_lang)
           

@@ -1,0 +1,21 @@
+#+TITLE: Code block modifiers
+
+We have the following process, but it will take 5 seconds to start...
+
+#+name: waits-5-seconds
+#+begin_src sh :waitsfor 2
+echo "Wait..."
+for i in `seq 1 10`;
+do
+echo "$i"
+sleep 1
+done
+echo "Now done!"
+#+end_src
+
+This one on the other hand starts as soon as possible:
+
+#+name: does-not-wait
+#+begin_src sh
+echo "whoosh"
+#+end_src

@@ -19,6 +19,10 @@ module OrgConverge
       @logger  = options[:logger] || Logger.new(STDOUT)
       @babel   = options[:babel]
       @runmode = options[:runmode]
+
+      # Code blocks whose start invocation is manipulated run inside a thread
+      @threads = []
+      @running_threads = { }
     end
 
     # We allow other processes to exit with 0 status
@@ -29,28 +33,45 @@ module OrgConverge
       watch_for_output
       sleep 0.1
       begin
-        status = watch_for_termination        
-      end while @running.count > 0
+        status = watch_for_termination do 
+          @threads.each do |t|
+            unless t.alive?
+              t.exit
+              @running_threads.delete(t.__id__)
+            end
+          end
+        end
+      end while (@running.count > 0 or @running_threads.count > 0)
     end
 
     # Overriden: we do not consider process formations
     def spawn_processes
       @processes.each do |process|
         reader, writer = create_pipe
+        pid    = nil
+        thread = nil
         begin
           # In case of spec mode, we need to redirect the output to a results file instead
           writer = File.open(process.options[:results], 'a') if @runmode == 'spec'
-          pid = process.run(:output => writer)
-          @names[process] = "#{@names[process]}.#{pid}"
+          pid, thread = process.run(:output => writer, :header => process.options[:header])
+          @names[process] = "#{@names[process]}.#{pid || thread.__id__}"
 
           # NOTE: In spec mode we need to be more strict on what is flushed by the engine
           # because we will be comparing the output
-          writer.puts "started with pid #{pid}" unless @runmode == 'spec'
+          unless @runmode == 'spec'
+            writer.puts "started with pid #{pid}" if pid
+            writer.puts "started thread with tid #{thread.__id__}" if thread
+          end
         rescue Errno::ENOENT
           writer.puts "unknown command: #{process.command}" unless @runmode == 'spec'
         end
-        @running[pid] = [process]
-        @readers[pid] = reader
+
+        @running[pid] = [process] if pid
+        @readers[pid || thread.__id__] = reader
+        if thread
+          @threads << thread
+          @running_threads[thread.__id__] = [process]
+        end
       end
     end
 
@@ -103,6 +124,21 @@ module OrgConverge
       pid
     rescue Errno::ECHILD
     end
+
+    def name_for(pid)
+      process = nil
+      index   = nil
+      if @running[pid]
+        process, index = @running[pid]
+      elsif @running_threads[pid]
+        process, index = @running_threads[pid]
+      end
+      name_for_index(process, index)
+    end
+
+    def name_for_index(process, index)
+      [ @names[process], index.to_s ].compact.join(".")
+    end
   end
 
   # Need to expose the options to make the process be aware
@@ -110,5 +146,41 @@ module OrgConverge
   # and where to put the results output
   class CodeBlockProcess < Foreman::Process
     attr_reader :options
+
+    def run(options={})
+      env    = @options[:env].merge(options[:env] || {})
+      output = options[:output] || $stdout
+      runner = "#{Foreman.runner}".shellescape      
+
+      # Build the list
+      block_modifiers = { }
+      if options[:header]
+        block_modifiers[:waitfor] = options[:header][:waitsfor] || options[:header][:waitfor]
+      end
+
+      pid     = nil
+      thread  = nil
+      process = nil
+
+      if block_modifiers[:waitfor]
+        thread = Thread.new do
+          sleep block_modifiers[:waitfor].to_i
+          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
+          pid = Process.spawn env, wrapped_command, :out => output, :err => output
+        end
+      else    
+        if Foreman.windows?
+          Dir.chdir(cwd) do
+            pid = Process.spawn env, expanded_command(env), :out => output, :err => output
+          end
+        else
+          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
+          pid = Process.spawn env, wrapped_command, :out => output, :err => output
+        end
+      end
+
+      # In case of thread, pid will be nil
+      return pid, thread
+    end
   end
 end
