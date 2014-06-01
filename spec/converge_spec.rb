@@ -145,4 +145,18 @@ describe OrgConverge::Command do
     largest = File.open("#{example_dir}/result").read
     largest.should == "906609\n"
   end
+
+  it "should support 'block_modifiers'" do
+    example_dir = File.join(EXAMPLES_DIR, 'block_modifiers')
+    setup_file = File.join(example_dir, 'run.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir
+                                 })
+    success = o.execute!
+    success.should == true
+    result = File.open("#{example_dir}/out.log").read
+    result.should == "whoosh\n1\n2\n3\n4\n5\n"
+  end
 end
