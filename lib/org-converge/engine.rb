@@ -65,12 +65,13 @@ module OrgConverge
     def output(name, data)
       data.to_s.lines.map(&:chomp).each do |message|
         # FIXME: In case the process has finished before its lines where flushed
+        output = "#{name} -- #{message}"
         ps, pid = name.empty? ? '<defunct>' : name.split('.')
-        output  = "#{pad_process_name(ps)}(#{pid})".fg get_color_for_pid(pid.to_i)
+        output  = "#{pad_process_name(ps)}".fg get_color_for_pid(pid.to_i)
         output += " -- "
         output += message
 
-        # FIXME: When the process has stopped already, the name of the process does not appear
+        # FIXME: When the process has stopped already, the name of the process/thread does not appear
         #        (which means that this approach is wrong from the beginning probably)
         logger.info output
       end
@@ -81,7 +82,7 @@ module OrgConverge
     private
     def name_padding
       @name_padding ||= begin
-                          name_padding  = @names.values.map { |n| n.length }.sort.last
+                          name_padding  = @names.values.map { |n| n.split('.').first.length }.sort.last
                           [ 9, name_padding ].max
                         end
     end
