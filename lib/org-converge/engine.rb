@@ -159,7 +159,9 @@ module OrgConverge
       if options[:header]
         block_modifiers[:waitfor] = options[:header][:waitsfor]  || options[:header][:waitfor] || options[:header][:sleep]
         block_modifiers[:timeout] = options[:header][:timeoutin] || options[:header][:timeout] || options[:header][:timeoutafter]
-        block_modifiers[:cwd] = options[:header][:dir] if options[:header][:dir]
+        if options[:header][:dir]
+          block_modifiers[:cwd] = File.expand_path(File.join(self.options[:cwd], options[:header][:dir]))
+        end
       end
 
       pid     = nil
@@ -174,14 +176,12 @@ module OrgConverge
           new_script           = File.join(block_modifiers[:cwd], ".#{options[:header][:name]}")
           FileUtils.cp(original_script, new_script)
           cmd = [bin, new_script].join(' ')
-
           wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{cmd}"
         else
           wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
         end
-
         opts = { :out => output, :err => output }
-        pid = Process.spawn env, wrapped_command, opts
+        pid  = Process.spawn env, wrapped_command, opts
       end
 
       if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir])

@@ -159,4 +159,18 @@ describe OrgConverge::Command do
     result = File.open("#{example_dir}/out.log").read
     result.should == "whoosh\n1\n2\n3\n4\n"
   end
+
+  it "should be able to chdir the process directory" do
+    example_dir = File.join(EXAMPLES_DIR, 'chdir')
+    setup_file = File.join(example_dir, 'local-run.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir
+                                 })
+    success = o.execute!
+    success.should == true
+    result = File.open("#{example_dir}/subdir/out.log").read
+    result.should == "within subdir\n"
+  end
 end
