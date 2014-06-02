@@ -5,6 +5,7 @@
 require 'foreman/engine'
 require 'foreman/process'
 require 'tco'
+require 'fileutils'
 
 module OrgConverge
   class Engine < Foreman::Engine
@@ -33,7 +34,7 @@ module OrgConverge
       watch_for_output
       sleep 0.1
       begin
-        status = watch_for_termination do 
+        status = watch_for_termination do
           @threads.each do |t|
             unless t.alive?
               t.exit
@@ -151,38 +152,53 @@ module OrgConverge
     def run(options={})
       env    = @options[:env].merge(options[:env] || {})
       output = options[:output] || $stdout
-      runner = "#{Foreman.runner}".shellescape      
+      runner = "#{Foreman.runner}".shellescape
 
       # whitelist the modifiers which manipulate how to the block is started
       block_modifiers = { }
       if options[:header]
         block_modifiers[:waitfor] = options[:header][:waitsfor]  || options[:header][:waitfor] || options[:header][:sleep]
         block_modifiers[:timeout] = options[:header][:timeoutin] || options[:header][:timeout] || options[:header][:timeoutafter]
+        block_modifiers[:cwd] = options[:header][:dir] if options[:header][:dir]
       end
 
       pid     = nil
       thread  = nil
-      process = nil
 
-      if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout])
+      process = proc do
+        wrapped_command = ''
+        if block_modifiers[:cwd]
+          @options[:cwd] = block_modifiers[:cwd]
+          # Need to adjust the path by having the run file at the same place
+          bin, original_script = command.split(' ')
+          new_script           = File.join(block_modifiers[:cwd], ".#{options[:header][:name]}")
+          FileUtils.cp(original_script, new_script)
+          cmd = [bin, new_script].join(' ')
+
+          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{cmd}"
+        else
+          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
+        end
+
+        opts = { :out => output, :err => output }
+        pid = Process.spawn env, wrapped_command, opts
+      end
+
+      if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir])
         thread = Thread.new do
           waitfor = block_modifiers[:waitfor].to_i
           timeout = block_modifiers[:timeout].to_i
-          process = proc do
+          timebased_proc = proc do
             sleep waitfor if waitfor > 0
-            wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
-            pid = Process.spawn env, wrapped_command, :out => output, :err => output
+            process.call
           end
-          timeout > 0 ? Timeout::timeout(timeout, &process) : process.call
+          timeout > 0 ? Timeout::timeout(timeout, &timebased_proc) : timebased_proc.call
         end
-      else    
+      else
         if Foreman.windows?
-          Dir.chdir(cwd) do
-            pid = Process.spawn env, expanded_command(env), :out => output, :err => output
-          end
+          Dir.chdir(cwd) { pid = Process.spawn env, expanded_command(env), :out => output, :err => output }
         else
-          wrapped_command = "exec #{runner} -d '#{cwd}' -p -- #{command}"
-          pid = Process.spawn env, wrapped_command, :out => output, :err => output
+          pid = process.call
         end
       end
 
