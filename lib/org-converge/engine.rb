@@ -185,14 +185,22 @@ module OrgConverge
       end
 
       if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir])
+        waitfor = block_modifiers[:waitfor].to_i
+        timeout = block_modifiers[:timeout].to_i
+
         thread = Thread.new do
-          waitfor = block_modifiers[:waitfor].to_i
-          timeout = block_modifiers[:timeout].to_i
-          timebased_proc = proc do
-            sleep waitfor if waitfor > 0
-            process.call
+          sleep waitfor if waitfor > 0
+          pid = process.call
+          if timeout > 0
+            sleep timeout
+            puts "PPID: #{pid}"
+            o = `ps -ef | awk '$3 == #{pid} { print $2 }'`
+            o.each_line do |cpid|
+              Process.kill(:TERM, cpid.to_i)
+            end
+            Process.kill(:TERM, pid)
+            Thread.current.kill
           end
-          timeout > 0 ? Timeout::timeout(timeout, &timebased_proc) : timebased_proc.call
         end
       else
         if Foreman.windows?
