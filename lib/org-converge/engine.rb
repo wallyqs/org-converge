@@ -193,7 +193,6 @@ module OrgConverge
           pid = process.call
           if timeout > 0
             sleep timeout
-            puts "PPID: #{pid}"
             o = `ps -ef | awk '$3 == #{pid} { print $2 }'`
             o.each_line do |cpid|
               Process.kill(:TERM, cpid.to_i)
