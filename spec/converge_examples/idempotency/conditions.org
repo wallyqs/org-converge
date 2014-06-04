@@ -49,14 +49,14 @@ fi
 #+end_src
 
 #+name: install-package-once-again
-#+begin_src sh :if package-already-installed
-echo "Not needed"
-echo "ongoing" >> installed
+#+begin_src sh :unless package-already-installed
+echo "Installing the package once again..."
+echo "not run" >> installed
 #+end_src
 
 #+name: do-everything-even-if-package-installed
-#+begin_src sh :unless package-already-installed
-echo "Doing this even if installed already" 
+#+begin_src sh :if package-already-installed
+echo "Doing this even if installed already..." 
 echo "eof" >> installed
 #+end_src
 
