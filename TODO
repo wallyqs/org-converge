@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/14] 0.1.0 version
+* [0/16] 0.1.0 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency (~--runmode=idempotent~)
@@ -28,8 +28,12 @@
   list of processes succeeds.
 - [ ] =:awaits:=
   Wait for other processes to finish before starting.
+- [ ] =:file=
+  For storing the output from the evaluation (already done in spec mode)a
+- [ ] Can use =:dir= for running a process remotely via ssh
+  This needs the credentials to be readily available
 
-* [2/3] 0.0.14
+* [2/2] 0.0.14
 
 All of the following makes it required to 
 track the result from the runs.
@@ -39,8 +43,6 @@ track the result from the runs.
   First step at achieving idempotency.
   This tracks the result from another block.
   In case the block results in exit 0, then true. Otherwise false.
-- [ ] Can use =:dir= for running a process remotely via ssh
-  This needs the credentials to be readily available
 
 * [2/2] 0.0.13
 
