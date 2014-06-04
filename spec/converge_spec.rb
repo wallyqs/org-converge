@@ -173,4 +173,19 @@ describe OrgConverge::Command do
     result = File.open("#{example_dir}/subdir/out.log").read
     result.should == "within subdir\n"
   end
+
+  it "should support idempotency checks via :if and :unless conditional clauses" do
+    example_dir = File.join(EXAMPLES_DIR, 'idempotency')
+    setup_file = File.join(example_dir, 'conditions.org')
+
+    o = OrgConverge::Command.new({ 
+                                   '<org_file>' => setup_file,
+                                   '--root-dir' => example_dir,
+                                   '--runmode'  => 'idempotent'
+                                 })
+    success = o.execute!
+    success.should == true
+    result = File.open("#{example_dir}/installed").read
+    result.should == "package is installed\neof\n"
+  end
 end

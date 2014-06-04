@@ -1,0 +1,158 @@
+#+TITLE:   Idempotency examples
+#+runmode: sequential
+
+First steps towards achieving idempotency.
+All of these are identified when tangling and during execution.
+
+- Example resources
+  + command
+    exit status 1 means that the block should be run
+    exit status 0 means that it should not be run
+  + directory
+    Can be covered by :mkdirp
+  + package
+    If package is in the dpkg -l output, don't install
+  + template
+    Makes sense only when tangling.
+    If there was a diff in the template, then apply and notify another block
+  + file
+    if it exists then run
+    else do not run it
+
+*** DONE When =:if <block>= is used, it will execute the block unless conditional block returns 0
+
+The most general case is when we link 2 different code blocks
+so that one can define whether the second one should be executed.
+
+In order to achieve this, the blocks need to be defined sequentially
+this way it will be checked whether sinatra is installed or not first,
+and use the exit status when considering to start the application.
+
+*NOTE*: Because of this constraint, parallel runs cannot run in converge mode.
+Only sequential runs supported.
+
+#+name: install-package
+#+begin_src sh
+echo "brew install something..."
+echo "package is installed" > installed
+#+end_src
+
+#+name: package-already-installed
+#+begin_src sh
+if [ -e installed ]; then
+  echo "Already installed"
+  exit 0
+else
+  echo "Needs install"
+  exit 1
+fi
+#+end_src
+
+#+name: install-package-once-again
+#+begin_src sh :if package-already-installed
+echo "Not needed"
+echo "ongoing" >> installed
+#+end_src
+
+#+name: do-everything-even-if-package-installed
+#+begin_src sh :unless package-already-installed
+echo "Doing this even if installed already" 
+echo "eof" >> installed
+#+end_src
+
+*** COMMENT When it has a results block, then it will be executed unless it matches the spec
+
+Here they would be run sequentially, but it would be better if the =:assert= block
+can be lazily invoked when deploy-app is about to run, not during the preparation step 
+which happens sequentially.
+
+#+name: ruby-version-installed
+#+begin_src sh :results output code :exports none
+ruby --version | awk '{ print $2 }'
+#+end_src
+
+#+RESULTS: ruby-version-installed
+#+BEGIN_SRC sh
+1.8.7
+#+END_SRC
+
+#+name: deploy-app
+#+begin_src sh :assert ruby-version-installed
+echo "Can deploy app because correct Ruby is installed"
+#+end_src
+
+*** COMMENT When =:if file-exists :at <path>= is used, it will execute the block unless the file exists
+
+#+name: execute-if-file-exists
+#+begin_src sh :if file-exists :at /var/run/ntpd.pid
+echo "Starting process because ntpd file exists exists.."
+#+end_src
+
+These =file-exists= kind of checks can be pluggable.
+
+*** COMMENT Ideas
+**** TODO How to support gated checks in parallel runs?
+
+Let's say that we have a run which makes a healthcheck in the end.
+In this case, it would mean that a healthcheck would be run
+once run-web-app is alive.
+
+Run a healthcheck for the application in the end
+to confirm that it boot up correctly:
+
+#+begin_src ruby :tangle sinatra/app.rb :mkdirp true
+require 'sinatra'
+
+get '/' do
+ "OK\n"
+end
+#+end_src
+
+***** Check if Sinatra is installed at least
+      :PROPERTIES:
+      :SRC_ORDER: sequential
+      :END:
+
+One idea is to accumulate them in case they are under
+the same headline, meaning that runlists can be grouped.
+
+#+name: sinatra-is-installed
+#+begin_src sh
+echo "Checking if sinatra is installed"
+gem list | grep sinatra
+#+end_src
+
+...then run it as follows:
+
+#+name: install-sinatra
+#+begin_src sh :unless sinatra-is-installed
+gem install sinatra
+#+end_src
+
+A block which is not executed due to an idempotency check 
+is equivalent to another one that ended with exit status 0.
+
+#+name: server-start
+#+begin_src sh :timeout 5 :if install-sinatra
+ruby sinatra/app.rb
+#+end_src
+
+***** Run a healthcheck for the sinatra application
+      :PROPERTIES:
+      :SRC_ORDER: sequential
+      :END:
+
+#+name: healthcheck-sinatra-app
+#+begin_src sh :sleep 3 :timeout 10 :awaits server-start
+while true; do
+  curl 127.0.0.1:4567 2> /dev/null
+  if [ $? != 0 ]; then
+    echo "NOT OK"
+  fi
+  sleep 1
+done
+#+end_src
+
+#+begin_src sh
+echo "Run"
+#+end_src

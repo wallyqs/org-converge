@@ -2,7 +2,7 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/10] 0.1.0 version
+* [0/14] 0.1.0 version
 
 - [ ] Macros can be loaded and applied to the configuration
 - [ ] Actually support converging and idempotency (~--runmode=idempotent~)
@@ -13,25 +13,34 @@
 - [ ] Heuristics for determining which binary to use for running the script
 - [ ] Display how the run would look like without making changes
   : org-converge setupfile.org --dry-run
-- [ ] Use :eval for evaling blocks (off by default)
-- [ ] Can use ~:dir~ for running a process relative to that directory
+- [ ] Use =:eval= for evaling blocks (off by default)
 - [ ] Bugfix for when results blocks have only inline examples or images
 - [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status
 - [ ] Bugfixes for spec run
-
-* [0/5] 0.0.14
-
 - [ ] Distributed run helpers for the header arguments
-  : ssh
+  Like remote =:dir= for example.
+- [ ] =:onerror=
+  aborteverything, restart, runhandler
+- [ ] =:asserts=
 - [ ] =:waits:=
   Wait for other processes to start before starting.
   The process does not start until the alive signal to the following
   list of processes succeeds.
 - [ ] =:awaits:=
   Wait for other processes to finish before starting.
-- [ ] =:onerror=
-  aborteverything, restart, runhandler
-- [ ] =:assertedby=
+
+* [2/3] 0.0.14
+
+All of the following makes it required to 
+track the result from the runs.
+
+- [X] Can use =:dir= for running a process relative to that directory
+- [X] =:if= and =:unless= checks
+  First step at achieving idempotency.
+  This tracks the result from another block.
+  In case the block results in exit 0, then true. Otherwise false.
+- [ ] Can use =:dir= for running a process remotely via ssh
+  This needs the credentials to be readily available
 
 * [2/2] 0.0.13
 

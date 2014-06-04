@@ -24,6 +24,10 @@ module OrgConverge
       # Code blocks whose start invocation is manipulated run inside a thread
       @threads = []
       @running_threads = { }
+
+      # Returns a list in the end with the exit status code from the code blocks
+      # that were run in parallel
+      @procs_exit_status = { }
     end
 
     # We allow other processes to exit with 0 status
@@ -43,6 +47,8 @@ module OrgConverge
           end
         end
       end while (@running.count > 0 or @running_threads.count > 0)
+
+      @procs_exit_status
     end
 
     # Overriden: we do not consider process formations
@@ -79,6 +85,7 @@ module OrgConverge
     def register(name, command, options={})
       options[:env] ||= env
       options[:cwd] ||= File.dirname(command.split(" ").first)
+
       process = OrgConverge::CodeBlockProcess.new(command, options)
       @names[process] = name
       @processes << process
@@ -126,6 +133,20 @@ module OrgConverge
     rescue Errno::ECHILD
     end
 
+    def termination_message_for(status)
+      n = name_for(status.pid).split('.').first
+
+      if status.exited?
+        @procs_exit_status[n] = status.exitstatus
+        "exited with code #{status.exitstatus}"
+      elsif status.signaled?
+        # TODO: How to handle exit by signals? Non-zero exit status so idempotency check fails?
+        "terminated by SIG#{Signal.list.invert[status.termsig]}"
+      else
+        "died a mysterious death"
+      end
+    end
+
     def name_for(pid)
       process = nil
       index   = nil
@@ -145,7 +166,6 @@ module OrgConverge
   # Need to expose the options to make the process be aware
   # of the possible running mode (specially spec mode)
   # and where to put the results output
-  require 'timeout'
   class CodeBlockProcess < Foreman::Process
     attr_reader :options
 
@@ -184,6 +204,8 @@ module OrgConverge
         pid  = Process.spawn env, wrapped_command, opts
       end
 
+      # In case we modify the run block, we run it in a Thread
+      # otherwise we continue treating it as a forked process.
       if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir])
         waitfor = block_modifiers[:waitfor].to_i
         timeout = block_modifiers[:timeout].to_i
@@ -193,20 +215,15 @@ module OrgConverge
           pid = process.call
           if timeout > 0
             sleep timeout
+            # FIXME: Kill children properly
             o = `ps -ef | awk '$3 == #{pid} { print $2 }'`
-            o.each_line do |cpid|
-              Process.kill(:TERM, cpid.to_i)
-            end
+            o.each_line { |cpid| Process.kill(:TERM, cpid.to_i) }
             Process.kill(:TERM, pid)
             Thread.current.kill
           end
         end
       else
-        if Foreman.windows?
-          Dir.chdir(cwd) { pid = Process.spawn env, expanded_command(env), :out => output, :err => output }
-        else
-          pid = process.call
-        end
+        pid = process.call
       end
 
       # In case of thread, pid will be nil

@@ -4,6 +4,7 @@ module OrgConverge
     attr_reader :logger
     attr_reader :ob
     attr_reader :engine
+    attr_reader :runmode
 
     def initialize(options)
       @options   = options
@@ -27,6 +28,9 @@ module OrgConverge
       logger.formatter = proc do |severity, datetime, progname, msg| 
         "[#{datetime.strftime('%Y-%m-%dT%H:%M:%S %z')}] #{msg}\n"
       end
+
+      # Keep track of the exit status from the process for idempotency checks
+      @procs_exit_status = Hash.new { |h,k| h[k] = { } }
     end
 
     def execute!
@@ -48,7 +52,7 @@ module OrgConverge
 
     def converge!
       tangle!
-      runmode = @options['--runmode'] || ob.in_buffer_settings['RUNMODE']
+      @runmode = @options['--runmode'] || ob.in_buffer_settings['RUNMODE']
       case
       when @options['--name']
         if runmode == 'sequentially'
@@ -65,7 +69,7 @@ module OrgConverge
       case runmode
       when 'parallel'
         run_blocks_in_parallel!
-      when 'sequential'
+      when 'sequential', 'idempotent'
         run_blocks_sequentially!
       when 'chained', 'chain', 'tasks'
         run_blocks_chain!
@@ -131,7 +135,6 @@ module OrgConverge
     end
 
     def run_blocks_sequentially!
-      @engine = OrgConverge::Engine.new(:logger => @logger, :babel => @babel)
       babel.tangle_runnable_blocks!(@run_dir)
 
       runlist_stack = []
@@ -141,17 +144,17 @@ module OrgConverge
 
       while not runlist_stack.empty?
         key, script = runlist_stack.shift
-
         # Decision: Only run blocks which have a name
         next unless script[:header][:name]
-
         display_name = script[:header][:name]
-        with_running_engine do |engine|
+        exit_status_list = with_running_engine(:runmode => @runmode) \
+        do |engine|
           file = File.expand_path("#{@run_dir}/#{key}")
           bin = determine_lang_bin(script)
           cmd = "#{bin} #{file}"
           run_procs(script, cmd, engine)
         end
+        @procs_exit_status.merge!(exit_status_list)
       end
       logger.info "Run has completed successfully.".fg 'green'
     end
@@ -209,7 +212,7 @@ module OrgConverge
           file = File.expand_path("#{@run_dir}/#{key}")
           bin = determine_lang_bin(script)
           cmd = "#{bin} #{file}"
-          engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger }
+          run_procs(script, cmd, engine)
         end
       end
       logger.info "Run has completed successfully.".fg 'green'
@@ -344,6 +347,26 @@ module OrgConverge
     def run_procs(script, cmd, engine=nil)
       engine ||= @engine
       display_name = script[:header][:name]
+
+      if @runmode == 'idempotent'
+        case
+        when script[:header][:if]
+          block_name = script[:header][:if]
+          exit_status = @procs_exit_status[block_name]
+          if exit_status == 0
+            logger.info "#{display_name.fg 'green'} -- Skipped since if clause matches idempotency check from '#{block_name.fg 'yellow'}'"
+            return
+          end
+        when script[:header][:unless]
+          block_name = script[:header][:unless]
+          exit_status = @procs_exit_status[block_name]
+          unless exit_status == 0
+            logger.info "#{display_name.fg 'green'} -- Skipped since unless clause matches idempotency check from '#{block_name.fg 'yellow'}'"
+            return
+          end
+        end
+      end
+
       if script[:header][:procs]
         procs = script[:header][:procs].to_i
         1.upto(procs) do |i|

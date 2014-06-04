@@ -25,5 +25,5 @@ end
 
 exit 1 unless cmd
 
-o = OrgConverge::Command.new(cmd)
+o = OrgConverge::Command.new(cmd.merge({ '--runmode' => 'idempotent' }))
 o.execute!
