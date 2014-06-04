@@ -1,0 +1,42 @@
+#+TITLE:   Changing directories locally
+#+runmode: sequential
+
+Like in the original Org babel from Emacs, it should be possible
+to run the block with a different root.  This avoids having to implement
+changing dir within the language as well.
+
+#+begin_src python :tangle subdir/greetings/greetings.py :mkdirp true
+def hello():
+  f = open('out.log', 'w')
+  f.write("Hi\n")
+  print "Finished writing."
+#+end_src
+
+#+begin_src python :tangle subdir/greetings/__init__.py :mkdirp true
+# greetings module
+#+end_src
+
+#+name: load-and-greet-test
+#+begin_src python :results output code :dir subdir
+from greetings import greetings
+
+print dir(greetings)
+
+for i in range(0, 10):
+  greetings.hello()
+#+end_src
+
+#+name: path-test
+#+begin_src python :results output code :dir subdir
+import os
+
+print os.getcwd()
+print os.path.realpath(__file__)
+print os.path.dirname(os.path.realpath(__file__))
+#+end_src
+
+#+name: bash-cwd-text
+#+begin_src sh :results output :dir subdir
+echo "within subdir"  > out.log
+cat out.log
+#+end_src
