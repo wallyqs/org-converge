@@ -7,6 +7,7 @@ We have the following process, but it will take 5 seconds to start...
 echo "Wait..."
 for i in `seq 1 4`;
 do
+echo $i
 echo $i >> out.log
 sleep 1
 done
@@ -21,7 +22,7 @@ echo "whoosh" > out.log
 #+end_src
 
 #+name: timeout-in-3-seconds
-#+begin_src sh :timeout 3
+#+begin_src sh :timeout 5
 while true; do
   echo "Eventually will timeout..."
   sleep 1
