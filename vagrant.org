@@ -1,0 +1,104 @@
+#+TITLE:   Vagrant environment setup
+#+startup: showeverything
+
+**** Importing the Vagrant keys first
+
+#+begin_src text :tangle vagrant/.git/info/sparse-checkout :mkdirp true
+keys
+#+end_src
+
+#+name: import-vagrant-keys-done
+#+begin_src sh :results output
+[ -e vagrant/keys/vagrant ] && echo "Already cloned"
+#+end_src
+
+#+name: import-vagrant-keys
+#+begin_src sh :unless import-vagrant-keys-done
+cd vagrant
+git init
+git remote add origin https://github.com/mitchellh/vagrant.git
+git config core.sparsecheckout true
+git pull origin master
+git checkout master
+chmod 0600 keys/vagrant
+#+end_src
+
+**** Vagrantfile for Ubuntu 14.04
+
+#+begin_src ruby :tangle Vagrantfile
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "ubuntu-14.04-amd64-vbox.box"
+  config.vm.box_url = "https://oss-binaries.phusionpassenger.com/vagrant/boxes/latest/ubuntu-14.04-amd64-vbox.box"
+
+  # config.vm.network :forwarded_port, guest: 80, host: 8080
+  # config.vm.network :private_network, ip: "192.168.33.10"
+  # config.vm.network :public_network
+  # config.ssh.forward_agent = true
+
+  config.vm.provider :virtualbox do |vb|
+    vb.gui = true
+    vb.customize ["modifyvm", :id, "--memory", "1024"]
+  end
+end
+#+end_src
+
+***** Import
+
+#+name: vagrant-running
+#+begin_src sh
+vagrant status
+#+end_src
+
+#+name: start_vagrant
+#+begin_src sh :unless vagrant-running
+vagrant up
+#+end_src
+
+***** Configure
+
+Install Emacs, Org mode and Org Converge in the VM.
+
+#+name: running-in-ubuntu
+#+begin_src sh :results output
+platform=`uname -a | awk '{print $2}'`
+if [ $platform == "ubuntu-14" ]; then
+  echo "OK"
+  exit 0
+else
+  echo "Only works in Ubuntu"
+  exit 1
+fi
+#+end_src
+
+#+name: apt-get-install
+#+begin_src sh :dir vagrant@localhost:2222/ :if running-in-ubuntu
+sudo apt-get update
+sudo apt-get install build-essentials emacs24-nox org-mode -y
+#+end_src
+
+**** Vagrantfile :: Docker provider
+
+#+begin_src ruby :tangle docker/Vagrantfile :mkdirp true
+Vagrant.configure("2") do |config|
+  config.vm.provider "docker" do |d|
+    d.build_dir = "."
+  end
+end
+#+end_src
+
+#+begin_src conf :tangle docker/Dockerfile
+FROM ubuntu
+RUN  apt-get -y update
+RUN  apt-get -y install emacs24-nox org-mode
+#+end_src
+
+#+name: vagrant-docker-provider
+#+begin_src sh :dir docker
+vagrant up --provider=docker
+#+end_src

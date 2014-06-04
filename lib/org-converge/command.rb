@@ -354,14 +354,14 @@ module OrgConverge
           block_name = script[:header][:if]
           exit_status = @procs_exit_status[block_name]
           unless exit_status == 0
-            logger.info "#{display_name.fg 'green'} -- Skipped since if clause matches idempotency check from '#{block_name.fg 'yellow'}'"
+            logger.info "#{display_name.fg 'green'} -- Skipped since :if clause matches check from '#{block_name.fg 'yellow'}'"
             return
           end
         when script[:header][:unless]
           block_name = script[:header][:unless]
           exit_status = @procs_exit_status[block_name]
           if exit_status == 0
-            logger.info "#{display_name.fg 'green'} -- Skipped since unless clause matches idempotency check from '#{block_name.fg 'yellow'}'"
+            logger.info "#{display_name.fg 'green'} -- Skipped since :unless clause matches check from '#{block_name.fg 'yellow'}'"
             return
           end
         end
