@@ -322,7 +322,7 @@ module OrgConverge
     end
 
     def with_running_engine(opts={})
-      default_options = { :logger => @logger, :babel => @babel }
+      default_options = { :logger => @logger, :babel => babel }
       options = default_options.merge!(opts)
       engine = OrgConverge::Engine.new(options)
       yield engine
@@ -377,6 +377,6 @@ module OrgConverge
       else
         engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger, :header => script[:header] }
       end
-    end    
+    end
   end
 end

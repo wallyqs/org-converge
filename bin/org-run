@@ -1,5 +1,29 @@
 #!/usr/bin/env ruby
 # -*- mode: ruby -*-
+require 'docopt'
+require 'org-converge'
 
-# alias for org-converge
-load File.expand_path('../org-converge', __FILE__)
+doc = <<OPTIONS
+
+org-run: Run code blocks in parallel by default.
+
+Usage:
+  org-run <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--runmode=<runmode>] [--name=<block_name>]
+
+Options:
+
+  -h --help               Show this screen.
+
+OPTIONS
+
+begin
+  require "pp"
+  cmd = Docopt::docopt(doc)
+rescue Docopt::Exit => e
+  puts e.message
+end
+
+exit 1 unless cmd
+
+o = OrgConverge::Command.new(cmd)
+o.execute!

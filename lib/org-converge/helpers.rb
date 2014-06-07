@@ -15,7 +15,7 @@ module OrgConverge
         ssh[:user] = $2
         ssh[:host] = $3
         ssh[:port] = ($4 || 22).to_i
-        ssh[:remote_dir] = $5
+        ssh[:remote_dir] = ($5 || '')
       end
 
       ssh
