@@ -21,7 +21,7 @@ This one on the other hand starts as soon as possible:
 echo "whoosh" > out.log
 #+end_src
 
-** COMMENT Fails sometimes
+** Fails sometimes
 
 #+name: timeout-in-3-seconds
 #+begin_src sh :timeout 5
