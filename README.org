@@ -256,7 +256,7 @@ it would be run sequentially with idempotency checks applied:
   ,#+end_src
 #+end_src
 
-    : org-spec chained-example.org --runmode=chained
+    : org-run chained-example.org --runmode=chained
 
     Instead of using =--runmode= options, it is also possible to just declare in buffer
     that the Org file should be run chained mode.
