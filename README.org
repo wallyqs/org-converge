@@ -47,13 +47,13 @@
 
 #+begin_src sh
   ,#+TITLE: Sample parallel run
-  
+  　
   ,#+name: infinite-worker-in-ruby
   ,#+begin_src ruby
   $stdout.sync = true
   loop { puts "working!"; sleep 1; }
   ,#+end_src
-  
+  　
   ,#+name: infinite-worker-in-python
   ,#+begin_src python :procs 2
   import sys
@@ -92,22 +92,22 @@
 #+begin_src sh
   ,#+TITLE:   Sample sequential run
   ,#+runmode: sequential
-  
+  　
   ,#+name: first
   ,#+begin_src sh
   echo "first"
   ,#+end_src
-  
+  　
   ,#+name: second
   ,#+begin_src sh
   echo "second"
   ,#+end_src
-  
+  　
   ,#+name: third
   ,#+begin_src sh
   echo "third"
   ,#+end_src
-  
+  　
   ,#+name: fourth
   ,#+begin_src sh
   echo "fourth"
