@@ -277,14 +277,15 @@ module OrgConverge
           else
             pid = process.call
           end
-          if timeout > 0
-            sleep timeout
-            # FIXME: Kill children properly
-            o = `ps -ef | awk '$3 == #{pid} { print $2 }'`
-            o.each_line { |cpid| Process.kill(:TERM, cpid.to_i) }
-            Process.kill(:TERM, pid)
-            Thread.current.kill
-          end
+          # TODO: This doesn't work
+          # if timeout > 0
+          #   sleep timeout
+          #   # FIXME: Kill children properly
+          #   o = `ps -ef | awk '$3 == #{pid} { print $2 }'`
+          #   o.each_line { |cpid| Process.kill(:TERM, cpid.to_i) }
+          #   Process.kill(:TERM, pid)
+          #   Thread.current.kill
+          # end
         end
       else
         pid = process.call
