@@ -149,9 +149,9 @@
     config files on a server by writing the following on a ~server.org~ file...
 
 #+begin_src sh
-
+　
 Configuration for a component that shoul be run in multitenant mode:
-
+　
 ,#+begin_src yaml :tangle /etc/component.yml
 multitenant: false
 status_port: 10004
@@ -290,6 +290,7 @@ it would be run sequentially with idempotency checks applied:
 #+begin_src sh
   ,#+sshidentifyfile:	vagrant/keys/vagrant
   ,#+name: remote-bash-code-block
+  　
   ,#+begin_src sh :results output :dir /vagrant@127.0.0.1#2222:/tmp
   random_number=$RANDOM
   for i in `seq 1 10`; do echo "[$random_number] Running script is $0 being run from `pwd`"; done
