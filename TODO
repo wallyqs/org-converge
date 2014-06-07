@@ -2,23 +2,23 @@
 #+TODO:    TODO | DONE CANCELED 
 #+startup: showeverything
 
-* [0/16] 0.1.0 version
+* [0/15] 1.0.0 version
+
+Some of these need further work on the Org Ruby parser.
 
 - [ ] Macros can be loaded and applied to the configuration
-- [ ] Actually support converging and idempotency (~--runmode=idempotent~)
-  + Do not do an operation unless it is required
-  + Abort in case there was a failure in executing the script.
-  + This would work by using the ~:cache true~ to a block header argument
 - [ ] Support for ~#+SETUPFILE~
+  To load the macros
+- [ ] Support converging and idempotency (~--runmode=idempotent~)
+  + Do not do an operation unless it is required
+  + Abort in case there was a failure in executing one of the scripts.
 - [ ] Heuristics for determining which binary to use for running the script
 - [ ] Display how the run would look like without making changes
   : org-converge setupfile.org --dry-run
-- [ ] Use =:eval= for evaling blocks (off by default)
 - [ ] Bugfix for when results blocks have only inline examples or images
-- [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status
-- [ ] Bugfixes for spec run
-- [ ] Distributed run helpers for the header arguments
-  Like remote =:dir= for example.
+- [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status 
+- [ ] =:eval=
+  For evaling blocks (off by default)
 - [ ] =:onerror=
   aborteverything, restart, runhandler
 - [ ] =:asserts=
@@ -30,7 +30,9 @@
   Wait for other processes to finish before starting.
 - [ ] =:file=
   For storing the output from the evaluation (already done in spec
-  mode)a
+  mode)
+- [ ] =:cache true=
+  Also part of the idempotency checks.
 - [ ] =:env= and =#+envfile:=
 
 * [1/1] 0.0.15
@@ -126,8 +128,8 @@ Need some basic functionality of what Org babel offers first.
 - [X] ~--tangle~ flag
 - [X] Support a root dir for when not running relative to the directory
 
-* [6/21] Ideas
-** TODO Chaining resources with ~#+NAME:~ directives and ~:notify~ argument
+* [9/20] Ideas
+** TODO Chaining resources with =#+name:= directives and =:notify= argument
 
 One idea is to be able to notify resources by naming the code blocks.
 
@@ -148,26 +150,18 @@ sudo /etc/register-to-balancer
 - Support for ~:before all~ and ~:after all~ added
 ** TODO Add namespace dynamically to the tasks using an in buffer setting
 
-When including files there can be some potential scoping issues.
+There can be some potential scoping issues when using =#+include:=
 
-** TODO Inject macros within the environment variables from a runnable process
 ** TODO Clarify which ones of the header arguments to implement
 
 http://orgmode.org/manual/Specific-header-arguments.html#Specific-header-arguments
-
-** TODO Use sshkit for running remote processes
-** TODO By default, it should use current dir for tangling
-** TODO Converging: Only do an operation when it didn't finish
-
-Hence the name of the project
-
 ** TODO For now we keep the indentation of the code blocks
 
 The indentatin of the ~#+begin_src~ should always 
 be at the beginning of the file, not at the indentation
 level from when the file was written in Org mode.
 
-** TODO We should have a whitelist of languages that can be executed and ignore everything
+** TODO We should have a whitelist of languages that can be executed and ignore everything else
 
 Under which heuristics or configuration should we decide which will be the 
 binary that should be used to execute the block? Specify with shebang?
@@ -188,9 +182,14 @@ It should be possible to tangle the files this way:
 
 It seems that there is support for a ~#+SETUPFILE~
 
-** TODO Something more flexible than macros:
+** TODO Something more flexible than macros for templating
 
-One example of syntax that we could use instead of macros:
+One example of syntax that we could use instead of macros.
+One idea is to use the =:session= argument and different drivers
+for languages that are commonly used for the configuration.
+This would inject the settings into a =@macros= hash from where
+the values can be picked up to be applied at runtime, sort 
+of like the overrride attributes feature from Chef.
 
 #+begin_src yaml :session
 fluentd:
@@ -198,13 +197,34 @@ fluentd:
   path: here.log
 #+end_src
 
-But need to 
+Or also json could be used:
 
-** TODO Choosing a templating language: default for now is mustache
+#+begin_src js :session
+{
+  "fluentd": {
+    "port": 4224,
+    "path": "here.log"
+  }
+}
+#+end_src
+
+Or even just plain Ruby?
+
+#+begin_src ruby :session
+session = {
+  "fluentd" => {
+    "port" => 4224,
+    "path" => "here.log"
+  }
+}
+#+end_src
+
+** TODO Choosing a templating language
 
 We could implement the macro systems, but it seems that it may not be
 strong enough for providing with all the cases we may run into.
-** TODO Support caching?
+
+** TODO Support =:cache=?
 
 #+begin_src emacs-lisp :cache yes :exports results
   (random)
@@ -213,11 +233,15 @@ strong enough for providing with all the cases we may run into.
 #+RESULTS[db54597aed193d861d01bf92110e10f28f8f40d4]:
 : 842438499349743708
 
-** TODO Support :eval ?
+** TODO Support =:eval=?
 
 #+begin_src sh :eval (print "Really doing this...")
   echo "Going ahead with operation X!"
 #+end_src
+** DONE By default, it should use current dir for tangling
+** DONE Converging: Only do an operation when it didn't finish
+
+Hence the name of the project
 
 ** DONE ~#+NAME:~ could be used in the logger for identifying the process
 ** DONE Managing dependencies: could be handled with ~#+include~ directives
@@ -251,6 +275,8 @@ would create the necessary directories behind the scenes.
   ,mkdir -p etc/fluentd/config
   ,#+end_src
 #+end_src
+
+** CANCELED Use sshkit for running remote processes
 ** CANCELED How to set the permissions from the directory from the file that is being tangled when it does not exists?
 
 By default, this would be 0644, but we also need to specify the
