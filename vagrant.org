@@ -77,7 +77,7 @@ fi
 #+end_src
 
 #+name: apt-get-install
-#+begin_src sh :dir vagrant@localhost:2222/ :if running-in-ubuntu
+#+begin_src sh :dir /vagrant@localhost#2222:/ :if running-in-ubuntu
 sudo apt-get update
 sudo apt-get install build-essentials emacs24-nox org-mode -y
 #+end_src
