@@ -29,9 +29,14 @@
 - [ ] =:awaits:=
   Wait for other processes to finish before starting.
 - [ ] =:file=
-  For storing the output from the evaluation (already done in spec mode)a
-- [ ] Can use =:dir= for running a process remotely via ssh
-  This needs the credentials to be readily available
+  For storing the output from the evaluation (already done in spec
+  mode)a
+- [ ] =:env= and =#+envfile:=
+
+* [1/1] 0.0.15
+
+- [X] Can use =:dir= for running a process remotely via ssh.
+  This needs the remote credentials to be available.
 
 * [2/2] 0.0.14
 

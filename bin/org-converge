@@ -5,10 +5,10 @@ require 'org-converge'
 
 doc = <<OPTIONS
 
-org-converge: A light configuration management tool for Org mode
+org-converge: Run with idempotency checks.
 
 Usage:
-  org-converge <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--runmode=<runmode>] [--name=<block_name>]
+  org-converge <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>]
 
 Options:
 

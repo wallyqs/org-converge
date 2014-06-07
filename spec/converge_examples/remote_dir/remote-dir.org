@@ -1,0 +1,76 @@
+#+TITLE:		Remote runs
+#+sshidentifyfile:	vagrant/keys/vagrant
+#+sshpassword:          vagrant
+#+startup:              showeverything
+
+*Note*: This one needs a vagrant VM available for testing...
+
+A block can be specified to be run remotely as well.
+In order to do this, it is needed to specify in the =:dir= block header argument
+the location of the remote node to connect to, as well as user name to use.
+
+*** Running locally
+
+#+name: 50-times
+#+begin_src ruby
+$stdout.sync = true
+50.times { puts "hello"; sleep 0.2 }
+#+end_src
+
+#+name: hello-world-block
+#+begin_src sh
+for i in `seq 1 30`; do
+echo "$i: hello world"
+sleep 0.5
+done
+#+end_src
+
+*** Running remotely
+
+#+name: remote-bash-code-block
+#+begin_src sh :results output :dir /vagrant@127.0.0.1#2222:/tmp
+random_number=$RANDOM
+for i in `seq 1 10`; do echo "[$random_number] Running script is $0 being run from `pwd`"; done
+#+end_src
+
+#+name: remote-ruby-code-block
+#+begin_src ruby :results output :dir /vagrant@127.0.0.1#2222:/tmp :shebang #!/usr/bin/ruby
+$stdout.sync= true
+random_number = rand(10)
+10.times do
+  puts "[#{random_number}] Running script is #{$0} being run from #{`pwd`.chomp}"
+end
+#+end_src
+
+#+name: remote-hello-from-default-path
+#+begin_src sh :results output :dir /vagrant@127.0.0.1#2222:
+random_number=$RANDOM
+for i in `seq 1 10`; do echo "[$random_number] Running script is $0 being run from `pwd`"; done
+#+end_src
+
+*** DONE Improvement: Need to be able to set a default identity file for doing ssh.
+
+#+sshidentityfile: vagrant/keys/vagrant
+
+*** DONE Should the remote runs and local runs coexists? : yes
+
+By specifying a remote dir:
+
+- The defined script will be scp to that remote dir
+- then executed using the binary in the path
+
+*** Ideas
+
+It would be useful to be able to define the nodes like:
+
+#+hosts: vagrant /vagrant@127.0.0.1#2222:
+#+hosts: node-1  /vagrant@127.0.0.1#2222:
+
+So that we could call it like:
+
+#+begin_src sh :host vagrant
+echo "test" > test
+#+end_src
+
+It would be even better if this list of hosts could be discovered
+by subscribing to a message bus.

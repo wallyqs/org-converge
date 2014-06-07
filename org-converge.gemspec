@@ -19,5 +19,7 @@ Gem::Specification.new do |gem|
   gem.add_runtime_dependency('foreman',  '~> 0.63')
   gem.add_runtime_dependency('tco',      '~> 0.1')
   gem.add_runtime_dependency('rake',     '~> 10.3')
-  gem.add_runtime_dependency('diff-lcs', '~> 1.2')  
+  gem.add_runtime_dependency('diff-lcs', '~> 1.2')
+  gem.add_runtime_dependency('net-ssh', '>= 2.8.0')
+  gem.add_runtime_dependency('net-scp', '>= 1.1.2')
 end

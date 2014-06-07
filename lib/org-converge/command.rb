@@ -1,5 +1,6 @@
 module OrgConverge
   class Command
+    include Helpers 
     attr_reader :dotorg
     attr_reader :logger
     attr_reader :ob
@@ -321,7 +322,7 @@ module OrgConverge
     end
 
     def with_running_engine(opts={})
-      default_options = { :logger => @logger, :babel => @babel }
+      default_options = { :logger => @logger, :babel => babel }
       options = default_options.merge!(opts)
       engine = OrgConverge::Engine.new(options)
       yield engine
@@ -375,14 +376,6 @@ module OrgConverge
         end
       else
         engine.register display_name, cmd, { :cwd => @root_dir, :logger => logger, :header => script[:header] }
-      end
-    end
-
-    def determine_lang_bin(script)
-      if script[:header][:shebang]
-        script[:header][:shebang].gsub('#!', '')
-      else
-        script[:lang]
       end
     end
   end

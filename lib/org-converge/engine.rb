@@ -6,6 +6,8 @@ require 'foreman/engine'
 require 'foreman/process'
 require 'tco'
 require 'fileutils'
+require 'net/ssh'
+require 'net/scp'
 
 module OrgConverge
   class Engine < Foreman::Engine
@@ -85,6 +87,7 @@ module OrgConverge
     def register(name, command, options={})
       options[:env] ||= env
       options[:cwd] ||= File.dirname(command.split(" ").first)
+      options[:babel] ||= @babel
 
       process = OrgConverge::CodeBlockProcess.new(command, options)
       @names[process] = name
@@ -131,6 +134,7 @@ module OrgConverge
       yield if block_given?
       pid
     rescue Errno::ECHILD
+      yield if block_given?
     end
 
     def termination_message_for(status)
@@ -167,12 +171,15 @@ module OrgConverge
   # of the possible running mode (specially spec mode)
   # and where to put the results output
   class CodeBlockProcess < Foreman::Process
+    include OrgConverge::Helpers
     attr_reader :options
 
     def run(options={})
       env    = @options[:env].merge(options[:env] || {})
+      logger = @options[:logger]
       output = options[:output] || $stdout
       runner = "#{Foreman.runner}".shellescape
+      @babel = @options[:babel]
 
       # whitelist the modifiers which manipulate how to the block is started
       block_modifiers = { }
@@ -180,7 +187,12 @@ module OrgConverge
         block_modifiers[:waitfor] = options[:header][:waitsfor]  || options[:header][:waitfor] || options[:header][:sleep]
         block_modifiers[:timeout] = options[:header][:timeoutin] || options[:header][:timeout] || options[:header][:timeoutafter]
         if options[:header][:dir]
-          block_modifiers[:cwd] = File.expand_path(File.join(self.options[:cwd], options[:header][:dir]))
+          ssh_params = determine_ssh_params(options[:header][:dir])
+          if ssh_params[:host]
+            block_modifiers[:ssh] = ssh_params
+          else
+            block_modifiers[:cwd] = File.expand_path(File.join(self.options[:cwd], options[:header][:dir]))
+          end
         end
       end
 
@@ -204,15 +216,67 @@ module OrgConverge
         pid  = Process.spawn env, wrapped_command, opts
       end
 
+      ssh_process = nil
+      if block_modifiers[:ssh]
+        ssh_process = proc do
+          ssh_options = { }
+          ssh_options[:port]       = block_modifiers[:ssh][:port]
+          ssh_options[:password]   = block_modifiers[:ssh][:password]   if block_modifiers[:ssh][:password]
+          ssh_options[:keys] = @babel.ob.in_buffer_settings['SSHIDENTIFYFILE'] if @babel.ob.in_buffer_settings['SSHIDENTIFYFILE']
+          begin
+            # SCP the script to run remotely and the binary used to run it
+            binary, script = command.split(' ')
+            remote_file = if not block_modifiers[:ssh][:remote_dir].empty?
+                            File.join(block_modifiers[:ssh][:remote_dir], "org-run-#{File.basename(script)}")
+                          else
+                            "org-run-#{File.basename(script)}"
+                          end
+            scp_options = ssh_options
+            scp_options[:keys] = [ssh_options[:keys]] if ssh_options[:keys]
+
+            # TODO: Detect and upload the file only once
+            Net::SCP.upload!(block_modifiers[:ssh][:host],
+                             block_modifiers[:ssh][:user],
+                             script,
+                             remote_file,
+                             :ssh => scp_options)
+            Net::SSH.start(block_modifiers[:ssh][:host], 
+                           block_modifiers[:ssh][:user], ssh_options) do |ssh|
+              channel = ssh.open_channel do |chan|
+                chan.exec "#{binary} #{remote_file}" do |ch, success|
+                  raise "could not execute command" unless success
+
+                  # "on_data" is called when the process writes something to stdout
+                  # "on_extended_data" is called when the process writes something to stderr
+                  chan.on_data          { |c, data| output.puts data       }
+                  chan.on_extended_data { |c, type, data| output.puts data }
+                  chan.on_close         { output.puts "exited from #{block_modifiers[:ssh][:host]}"}
+                end
+                chan.wait
+              end
+              ssh.loop
+            end
+          rescue Net::SCP::Error
+            output.puts "Error when transporting file: #{script}"
+          rescue => e
+            puts "Error during ssh session: #{e}"
+          end
+        end
+      end
+
       # In case we modify the run block, we run it in a Thread
       # otherwise we continue treating it as a forked process.
-      if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir])
+      if block_modifiers and (block_modifiers[:waitfor] || block_modifiers[:timeout] || block_modifiers[:dir] || block_modifiers[:ssh])
         waitfor = block_modifiers[:waitfor].to_i
         timeout = block_modifiers[:timeout].to_i
 
         thread = Thread.new do
           sleep waitfor if waitfor > 0
-          pid = process.call
+          if ssh_process
+            ssh_process.call
+          else
+            pid = process.call
+          end
           if timeout > 0
             sleep timeout
             # FIXME: Kill children properly
