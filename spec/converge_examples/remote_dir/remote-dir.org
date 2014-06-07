@@ -38,7 +38,7 @@ for i in `seq 1 10`; do echo "[$random_number] Running script is $0 being run fr
 $stdout.sync= true
 random_number = rand(10)
 10.times do
-  puts "[#{random_number}] Running script is #{$0} being run from #{`pwd`.chomp}"
+  puts "[#{random_number}] Running script is #{$0} being run from #{File.dirname(__FILE__)}"
 end
 #+end_src
 
