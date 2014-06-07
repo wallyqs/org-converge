@@ -14,12 +14,13 @@ Gem::Specification.new do |gem|
   gem.name          = "org-converge"
   gem.require_paths = ["lib"]
   gem.version       = OrgConverge::VERSION
+  gem.license       = 'MIT'
   gem.add_runtime_dependency('docopt',   '~> 0.5')
   gem.add_runtime_dependency('org-ruby', '~> 0.9')
   gem.add_runtime_dependency('foreman',  '~> 0.63')
   gem.add_runtime_dependency('tco',      '~> 0.1')
   gem.add_runtime_dependency('rake',     '~> 10.3')
   gem.add_runtime_dependency('diff-lcs', '~> 1.2')
-  gem.add_runtime_dependency('net-ssh', '>= 2.8.0')
-  gem.add_runtime_dependency('net-scp', '>= 1.1.2')
+  gem.add_runtime_dependency('net-ssh', '~> 2.8')
+  gem.add_runtime_dependency('net-scp', '~> 1.1')
 end
