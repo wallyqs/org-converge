@@ -3,229 +3,306 @@
 
 * Org Converge
 
-[[https://secure.travis-ci.org/wallyqs/org-converge.png?branch=master]]
+  [[https://secure.travis-ci.org/wallyqs/org-converge.png?branch=master]]
 
 ** Description
 
-This is an experiment of using Org mode to
-create documentable reproducible runs, borrowing some ideas
-of what is possible to do with tools like =chef-solo=,
-=rake=, =foreman=, etc...
+   A framework to create documented reproducible runs using [[http://orgmode.org/worg/org-contrib/babel/Org Babel][Org Mode]],
+   borrowing several ideas of what is possible to do with tools
+   like =chef-solo=, =rake=, =foreman= and =capistrano=.
 
-** Installing
+** Install
 
-: gem install org-converge
+   : gem install org-converge
 
 ** Motivation
 
-[[http://orgmode.org/worg/org-contrib/babel/Org Babel][Org Mode]] has proven to be flexible enough to write
-[[http://www.jstatsoft.org/v46/i03][reproducible research papers]]. 
-Then, I believe that configuring and setting up
-a server for example, is something that could also be done using
-the same approach, given that /converging/ the configuration 
-is a kind of run that one ought to be able to reproduce.
+   [[http://orgmode.org/worg/org-contrib/babel/Org Babel][Org Mode]] has proven to be flexible enough to write [[http://www.jstatsoft.org/v46/i03][reproducible research papers]],
+   then I believe that configuring and setting up a server for
+   example, is something that could also be done using
+   the same approach, given that /converging/ the configuration
+   is a kind of run that one ought to be able to reproduce.
 
-** Usage
+   Taking the original Emacs implementation as reference,
+   Org Converge uses the [[https://github.com/wallyqs/org-ruby][Ruby implementation of the Org mode parser]]
+   to implement and enhance the functionality from Org Babel 
+   by adding helpers to define the properties of a run while taking advantage
+   of what is already there in the Ruby ecosystem.
 
-To run the blocks in parallel:
+** Usage examples
 
-#+begin_src sh
-org-converge path/to/setup-file.org --runmode=parallel
-#+end_src
-
-or sequentially...
-
-#+begin_src sh
-org-converge path/to/setup-file.org --runmode=sequential
-#+end_src
-
-By including ~:after~ or ~:before~ arguments to a block,
-it is possible to make the blocks depend on one another.
-
-#+begin_src sh
-org-converge path/to/setup-file.org --runmode=chained
-#+end_src
-
-In case the blocks have results blocks, it is possible to run
-the blocks and matched against the results with the ~org-spec~ helper command:
-
-#+begin_src sh
-org-spec path/to/file-spec.org
-#+end_src
-
-*** Other commands available
-
-: org-run        # alias for org-converge
-: org-tangle     # just tangles the contents without running the blocks
-
-** How it works
-
-Org Converge uses a liberally extended version of Org Babel
-features in order to give support for converging the configuration
-of a server, and the [[https://github.com/wallyqs/org-ruby][Ruby implementation of the Org mode parser]] 
-which makes integrating with useful Ruby tools like foreman, rake, rspec and ohai more straightforward.
-
-For example, using Org Babel we can easily spread config
-files on a server by writing the following on a ~server.org~ file.
-
-#+begin_src sh
-,#+begin_src yaml :tangle /etc/component.yml
-multitenant: false
-status_port: 10004
-,#+end_src
-#+end_src
-
-And then configure it by running it as follows, (considering we have
-the correct permissions for tangling at =/etc/component.yml=): 
-
-#+begin_src sh
-sudo org-converge server.org
-#+end_src
-
-Next, let's say that we no only one want to set the configured templates,
-but that we also want to install some packages. In that case, we
-should be able to do the following:
-(Note: Currently, only named blocks would be run)
-
-#+begin_src sh
-,** Configuring the component
-　
-,#+begin_src yaml :tangle /etc/component.yml
-multitenant: false
-status_port: 10004
-,#+end_src  
-
-,** Installing the dependencies
-
-Need the following so that ~bundle install~ can compile 
-the native extensions correctly.
- 
-# Giving the block a name would make it run
-　
-,#+name: build_essentials
-,#+begin_src sh
-apt-get install build-essentials -y
-,#+end_src
-　
-Then the following should work:
-　
-,#+name: bundle_install　
-,#+begin_src sh
-cd project_path
-bundle install
-,#+end_src
-#+end_src
-
-Since we are using Org mode syntax, it is possible to reuse this setup file by including it.
-
-#+begin_src sh
-,#+TITLE: Another setup
-
-Include the code blocks from the server into this:
-,#+include: "server.org"
-
-,#+name: install_org_mode
-,#+begin_src sh
-apt-get install org-mode -y
-,#+end_src
-#+end_src
-
-#+end_src
-
-** Examples
-
-Currently there is support for the following kind of runs:
-
-- runs where the blocks need to run sequentially (~--runmode=sequential~) ::
-  
-  Each code block is part of a step to be ran
-  
-- runs where the blocks need to be run in parallel (~--runmode=parallel~) ::
-  
-  One example of this is having what is supposed to be a distributed system running locally for development (where ~foreman~ would be used).
-  
-- runs where the blocks need to be run in sequence according to defined dependencies (~--runmode=chained~) ::
-  
-  Set of runs that are usually covered by using something like rake, make, etc...
-
-- runs where the blocks are run and matched against the expected results for testing (~--runmode=spec~) ::
-  
-  Each block is run and there is an assertion to check whether the contents in ~#+RESULTS~ block match
-  
-Besides being able to specify which kind of run to use through an option, it is also possible 
-to define this within the Org mode file itself as an in buffer setting:
-
-#+begin_src org
-  ,#+TITLE:   Defining the runmode as an in buffer setting 
-  ,#+runmode: sequential
-#+end_src
+   Org Converge supports the following kind of runs below:
 
 *** Parallel runs
 
-The following is an example of running 3 processes
-in parallel by defining them as code blocks from 
-an Org mode file:
+    Each one of the code blocks is run on an independent process.
+    This is akin to having a =Procfile= based application, where
+    one of the runner command would be to start a web application
+    and the other one to start the a worker processes.
+
+    In the following example, we are defining 2 code blocks, one 
+    that would be run using Ruby and one more that would be run in Python.
+    Notice that the Python block has =:procs= set to 2, meaning that 
+    it would spawn 2 processes for this.
 
 #+begin_src sh
-  ,#+TITLE: Running Org babel processes in parallel
-  　
-  ,* Print with different languages
-   　　
-  ,#+name: hello_from_bash
-  ,#+begin_src sh :shebang #!/bin/bash
-  while true; do echo "hello world from bash"; sleep 1; done
-  ,#+end_src
-　  　 
-  ,#+name: hello_from_ruby
-  ,#+begin_src ruby :shebang #!/usr/local/bin/ruby
+  ,#+TITLE: Sample parallel run
+  
+  ,#+name: infinite-worker-in-ruby
+  ,#+begin_src ruby
   $stdout.sync = true
-  loop { puts "hello world from ruby" ; sleep 1 }
+  loop { puts "working!"; sleep 1; }
   ,#+end_src
-  　 　
-  ,#+name: hello_from_python
-  ,#+begin_src python :shebang #!/usr/bin/python
-  import time
+  
+  ,#+name: infinite-worker-in-python
+  ,#+begin_src python :procs 2
   import sys
-  for i in range(0,100):
-    print "hello world from python"
+  import time
+  
+  while True:
+    print "working too"
     sys.stdout.flush()
     time.sleep(1)
-  ,#+end_src   
+  ,#+end_src
 #+end_src
 
-We store this in a file named =hello.org= and then run it as follows:
+    The above example can be run with the following:
+    
+    : org-run procfile-example.org
+
+    Sample output of the run:
 
 #+begin_src sh
-org-run hello.org
+[2014-06-07T18:05:48 +0900] infinite-worker-in-ruby     -- started with pid 19648
+[2014-06-07T18:05:48 +0900] infinite-worker-in-python:1 -- started with pid 19649
+[2014-06-07T18:05:48 +0900] infinite-worker-in-python:2 -- started with pid 19650
+[2014-06-07T18:05:48 +0900] infinite-worker-in-python:1 -- working too
+[2014-06-07T18:05:48 +0900] infinite-worker-in-python:2 -- working too
+[2014-06-07T18:05:48 +0900] infinite-worker-in-ruby     -- working!
+[2014-06-07T18:05:49 +0900] infinite-worker-in-python:1 -- working too
+[2014-06-07T18:05:49 +0900] infinite-worker-in-python:2 -- working too
 #+end_src
 
-This would produce an output similar to the following:
+*** Sequential runs
+
+    In case the code blocks form part of a runlist that should be 
+    ran sequentially, it is possible to do this by specifying the
+    ~runmode=sequential~ option.
 
 #+begin_src sh
-[2014-05-04T19:23:40 +0900] Tangling 0 files...
-[2014-05-04T19:23:40 +0900] Tangling succeeded!
-[2014-05-04T19:23:40 +0900] Tangling 3 scripts within directory: /Users/wallyqs/repos/org-converge/run...
-[2014-05-04T19:23:40 +0900] Running code blocks now! (3 runnable blocks found in total)
-[2014-05-04T19:23:40 +0900] hello_from_bash       (4664) -- started with pid 4664
-[2014-05-04T19:23:40 +0900] hello_from_ruby       (4665) -- started with pid 4665
-[2014-05-04T19:23:40 +0900] hello_from_python     (4666) -- started with pid 4666
-[2014-05-04T19:23:40 +0900] hello_from_bash       (4664) -- hello world from bash
-[2014-05-04T19:23:41 +0900] hello_from_ruby       (4665) -- hello world from ruby
-[2014-05-04T19:23:41 +0900] hello_from_python     (4666) -- hello world from python
-[2014-05-04T19:23:42 +0900] hello_from_ruby       (4665) -- hello world from ruby
+  ,#+TITLE:   Sample sequential run
+  ,#+runmode: sequential
+  
+  ,#+name: first
+  ,#+begin_src sh
+  echo "first"
+  ,#+end_src
+  
+  ,#+name: second
+  ,#+begin_src sh
+  echo "second"
+  ,#+end_src
+  
+  ,#+name: third
+  ,#+begin_src sh
+  echo "third"
+  ,#+end_src
+  
+  ,#+name: fourth
+  ,#+begin_src sh
+  echo "fourth"
+  ,#+end_src
 #+end_src
 
-Also possible to specify the name of the block to be ran:
+  In order to specify that this is to be run sequentially, 
+  we set the runmode option in the command line:
+
+  : org-run runlist-example.org --runmode=sequential
+
+  Another way of specifying this is via the Org mode file itself:
+
+  #+begin_src org
+  ,#+TITLE:   Defining the runmode as an in buffer setting 
+  ,#+runmode: sequential
+  #+end_src
+
+  Sample output:
 
 #+begin_src sh
-org-run hello.org --name from_ruby
+  [2014-06-07T18:10:33 +0900] first     -- started with pid 19845
+  [2014-06-07T18:10:33 +0900] first     -- first
+  [2014-06-07T18:10:33 +0900] first     -- exited with code 0
+  [2014-06-07T18:10:33 +0900] second    -- started with pid 19846
+  [2014-06-07T18:10:33 +0900] second    -- second
+  [2014-06-07T18:10:33 +0900] second    -- exited with code 0
+  [2014-06-07T18:10:33 +0900] third     -- started with pid 19847
+  [2014-06-07T18:10:33 +0900] third     -- third
+  [2014-06-07T18:10:33 +0900] third     -- exited with code 0
+  [2014-06-07T18:10:33 +0900] fourth    -- started with pid 19848
+  [2014-06-07T18:10:33 +0900] fourth    -- fourth
+  [2014-06-07T18:10:33 +0900] fourth    -- exited with code 0
 #+end_src
 
-*** Spec mode
+*** Configuration management runs
 
-In case the Org mode file has a results block which represents the expected result, 
-there is an ~org-spec~ command which can be useful to check whether there is change.
-For example, given the following file stored in ~test.org~:
+    For example, using Org Babel tangling functionality we can spread
+    config files on a server by writing the following on a ~server.org~ file...
+
+#+begin_src sh
+
+Configuration for a component that shoul be run in multitenant mode:
+
+,#+begin_src yaml :tangle /etc/component.yml
+multitenant: false
+status_port: 10004
+,#+end_src
+#+end_src
+
+    Then run:
+
+   : sudo org-tangle server.org
+
+*** Idempotent runs
+
+    A run can have idempotency checks (similar to how the execute resource from [[http://docs.opscode.com/resource_execute.html][Chef]] works).
+
+    An example of this, would be when installing packages.  In this example,
+    we want to install the =build-essential= package once, and skip it in following runs:
+
+#+begin_src sh
+  ,** Installing the dependencies
+  
+  Need the following so that ~bundle install~ can compile 
+  the native extensions correctly.
+  　
+  ,#+name: build-essential-installed
+  ,#+begin_src sh
+  dpkg -l | grep build-essential
+  ,#+end_src
+  　 
+  ,#+name: build_essentials
+  ,#+begin_src sh :unless build-essential-installed
+  apt-get install build-essential -y
+  ,#+end_src
+
+  ,#+name: bundle_install
+  ,#+begin_src sh
+  cd project_path
+  bundle install
+  ,#+end_src
+#+end_src
+
+  Furthermore,since we are using Org mode syntax, it is possible 
+  to reuse this setup file by including it into another Org file:
+
+#+begin_src sh
+  ,#+TITLE: Another setup
+  
+  Include the code blocks from the server into this:
+ 　
+  ,#+include: "server.org"
+  
+  ,#+name: install_org_mode
+  ,#+begin_src sh
+  apt-get install org-mode -y
+  ,#+end_src
+#+end_src
+#+end_src
+
+Since this a run that involves converging into a state,
+it would be run sequentially with idempotency checks applied:
+
+: sudo org-converge setup.org
+
+*** Dependencies based runs
+
+    In this type of runs we use the =:after= and =:before=
+    header arguments to specify the prerequisites for a code block to run,
+    similar to some of the functioality provided by tools like =rake= 
+    (Behind the scenes, these arguments create =Rake= tasks)
+
+    In order for this kind of run to work, it has to be specified
+    what is the task that we are converging to by using 
+    the =#+final_task:= in buffer setting:
+
+#+begin_src sh
+  ,#+TITLE:           Linked tasks example
+  ,#+runmode:         tasks
+  ,#+final_task:      final
+  
+  ,#+name: second
+  ,#+begin_src sh :after first
+  for i in `seq 5 10`; do 
+    echo $i >> out.log
+  done
+  ,#+end_src
+  
+  ,#+name: first
+  ,#+begin_src ruby
+  5.times { |n| File.open("out.log", "a") {|f| f.puts n } }
+  ,#+end_src
+  
+  ,#+name: final
+  ,#+begin_src python :after second :results output
+  print "Wrapping up with Python in the end"
+  f = open('out.log', 'a')
+  f.write('11')
+  f.close()
+  ,#+end_src
+  
+  ,#+name: prologue
+  ,#+begin_src sh :before first :results output
+  echo "init" > out.log
+  ,#+end_src
+#+end_src
+
+    : org-spec chained-example.org --runmode=chained
+
+    Instead of using =--runmode= options, it is also possible to just declare in buffer
+    that the Org file should be run chained mode.
+
+    #+begin_src org
+    ,#+TITLE:   Defining the runmode as an in buffer setting 
+    ,#+runmode: chained
+    #+end_src
+    
+    Sample output:
+
+#+begin_src sh
+[2014-06-07T18:14:25 +0900] Running final task: final
+[2014-06-07T18:14:25 +0900] prologue  -- started with pid 20035
+[2014-06-07T18:14:25 +0900] prologue  -- exited with code 0
+[2014-06-07T18:14:25 +0900] first     -- started with pid 20036
+[2014-06-07T18:14:26 +0900] first     -- exited with code 0
+[2014-06-07T18:14:26 +0900] second    -- started with pid 20038
+[2014-06-07T18:14:26 +0900] second    -- exited with code 0
+[2014-06-07T18:14:26 +0900] final     -- started with pid 20040
+[2014-06-07T18:14:26 +0900] final     -- Wrapping up with Python in the end
+[2014-06-07T18:14:26 +0900] final     -- exited with code 0
+#+end_src
+
+*** Remote runs
+
+    For any of the cases above, it is also possible to specify
+    whether the code blocks should be run remotely on another node.
+    This is done by using =:dir= in the code block header argument.
+
+#+begin_src sh
+  ,#+sshidentifyfile:	vagrant/keys/vagrant
+  ,#+name: remote-bash-code-block
+  ,#+begin_src sh :results output :dir /vagrant@127.0.0.1#2222:/tmp
+  random_number=$RANDOM
+  for i in `seq 1 10`; do echo "[$random_number] Running script is $0 being run from `pwd`"; done
+  ,#+end_src
+#+end_src
+
+  Note that in order for the above to work, it is also needed to set identity to be used by ssh.
+
+*** Asserted runs
+
+    In case the Org mode file has a results block which represents the expected result, 
+    there is an ~org-spec~ command which can be useful to check whether there was a change
+    that no longer makes the results from the Org file valid. Example:
 
 #+begin_src sh
   ,#+TITLE:   Expected results example
@@ -252,14 +329,17 @@ For example, given the following file stored in ~test.org~:
   ,#+end_example
 #+end_src
 
-We can be able to verify whether this is still correct by running ~org-spec test.org~
+  We can be able to verify whether this is still correct by running:
+
+  : org-spec test.org
 
 #+begin_src sh
 Checking results from 'hello' code block:	OK
 #+end_src
 
-As an example, let's say that the behavior of the original code block changed, and now says hello 5 times instead. 
-In that case the output would be as follows:
+  As an example, let's say that the behavior of the original code block changed,
+  and now says hello 5 times instead. 
+  In that case the output would be as follows:
 
 #+begin_src diff
 Checking results from 'hello' code block:	DIFF
@@ -283,6 +363,6 @@ Checking results from 'hello' code block:	DIFF
 
 ** Contributing
 
-The project is in very early development at this moment, but if you
-feel that it is interesting enough, please create a ticket to start
+The project is still in very early development and a proof of concept at this moment.
+But if you feel that it is interesting enough, please create a ticket to start
 the discussion.

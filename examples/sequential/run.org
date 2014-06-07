@@ -1,0 +1,22 @@
+#+TITLE:   Sample sequential run
+#+runmode: sequential
+
+#+name: first
+#+begin_src sh
+echo "first"
+#+end_src
+
+#+name: second
+#+begin_src sh
+echo "second"
+#+end_src
+
+#+name: third
+#+begin_src sh
+echo "third"
+#+end_src
+
+#+name: fourth
+#+begin_src sh
+echo "fourth"
+#+end_src

@@ -1,0 +1,18 @@
+#+TITLE: Sample parallel run
+
+#+name: infinite-worker-in-ruby
+#+begin_src ruby
+$stdout.sync = true
+loop { puts "working!"; sleep 1; }
+#+end_src
+
+#+name: infinite-worker-in-python
+#+begin_src python :procs 2
+import sys
+import time
+
+while True:
+  print "working too"
+  sys.stdout.flush()
+  time.sleep(1)
+#+end_src

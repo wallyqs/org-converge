@@ -17,6 +17,7 @@ Some of these need further work on the Org Ruby parser.
   : org-converge setupfile.org --dry-run
 - [ ] Bugfix for when results blocks have only inline examples or images
 - [ ] Bugfix for when the result from a ~org-spec~ run has non-zero exit status 
+- [ ] Tangling should be idempotent as well...
 - [ ] =:eval=
   For evaling blocks (off by default)
 - [ ] =:onerror=
