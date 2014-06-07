@@ -171,20 +171,20 @@ status_port: 10004
 
 #+begin_src sh
   ,** Installing the dependencies
-  
+  　
   Need the following so that ~bundle install~ can compile 
   the native extensions correctly.
-  　
+  　　
   ,#+name: build-essential-installed
   ,#+begin_src sh
   dpkg -l | grep build-essential
   ,#+end_src
-  　 
+  　 　
   ,#+name: build_essentials
   ,#+begin_src sh :unless build-essential-installed
   apt-get install build-essential -y
   ,#+end_src
-
+　　
   ,#+name: bundle_install
   ,#+begin_src sh
   cd project_path
@@ -197,11 +197,11 @@ status_port: 10004
 
 #+begin_src sh
   ,#+TITLE: Another setup
-  
+  　
   Include the code blocks from the server into this:
- 　
+ 　　
   ,#+include: "server.org"
-  
+  　
   ,#+name: install_org_mode
   ,#+begin_src sh
   apt-get install org-mode -y
@@ -229,19 +229,19 @@ it would be run sequentially with idempotency checks applied:
   ,#+TITLE:           Linked tasks example
   ,#+runmode:         tasks
   ,#+final_task:      final
-  
+  　
   ,#+name: second
   ,#+begin_src sh :after first
   for i in `seq 5 10`; do 
     echo $i >> out.log
   done
   ,#+end_src
-  
+  　
   ,#+name: first
   ,#+begin_src ruby
   5.times { |n| File.open("out.log", "a") {|f| f.puts n } }
   ,#+end_src
-  
+  　
   ,#+name: final
   ,#+begin_src python :after second :results output
   print "Wrapping up with Python in the end"
@@ -249,7 +249,7 @@ it would be run sequentially with idempotency checks applied:
   f.write('11')
   f.close()
   ,#+end_src
-  
+  　
   ,#+name: prologue
   ,#+begin_src sh :before first :results output
   echo "init" > out.log
@@ -306,14 +306,14 @@ it would be run sequentially with idempotency checks applied:
 
 #+begin_src sh
   ,#+TITLE:   Expected results example
-  　
+  　　
   ,#+name: hello
   ,#+begin_src ruby :results output
   10.times do 
     puts "hola"
   end
   ,#+end_src
-  　
+  　　
   ,#+RESULTS: hello
   ,#+begin_example
   hola
