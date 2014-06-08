@@ -1,5 +1,5 @@
 #+TITLE:		Remote runs
-#+sshidentifyfile:	vagrant/keys/vagrant
+#+sshidentityfile:	vagrant/keys/vagrant
 #+sshpassword:          vagrant
 #+startup:              showeverything
 
