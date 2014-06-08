@@ -222,7 +222,7 @@ module OrgConverge
           ssh_options = { }
           ssh_options[:port]       = block_modifiers[:ssh][:port]
           ssh_options[:password]   = block_modifiers[:ssh][:password]   if block_modifiers[:ssh][:password]
-          ssh_options[:keys] = @babel.ob.in_buffer_settings['SSHIDENTIFYFILE'] if @babel.ob.in_buffer_settings['SSHIDENTIFYFILE']
+          ssh_options[:keys] = @babel.ob.in_buffer_settings['SSHIDENTITYFILE'] if @babel.ob.in_buffer_settings['SSHIDENTITYFILE']
           begin
             # SCP the script to run remotely and the binary used to run it
             binary, script = command.split(' ')
