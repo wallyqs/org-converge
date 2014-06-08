@@ -288,7 +288,7 @@ it would be run sequentially with idempotency checks applied:
     This is done by using =:dir= in the code block header argument.
 
 #+begin_src sh
-  ,#+sshidentifyfile:	vagrant/keys/vagrant
+  ,#+sshidentityfile:	vagrant/keys/vagrant
   ,#+name: remote-bash-code-block
   　
   ,#+begin_src sh :results output :dir /vagrant@127.0.0.1#2222:/tmp
