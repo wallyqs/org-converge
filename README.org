@@ -161,6 +161,10 @@ status_port: 10004
     Then run:
 
    : sudo org-tangle server.org
+   
+   *Note:* The above tangle command is a reimplementation of the tangling functionality from Org mode using Ruby.
+   If you are interested in tangling from the command line without losing functionality and have available a local Emacs Org mode install,
+   the following project can be useful: <https://github.com/ngirard/org-noweb>
 
 *** Idempotent runs
 
