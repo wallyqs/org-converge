@@ -52,7 +52,7 @@ end
 
 #+name: vagrant-running
 #+begin_src sh
-vagrant status
+vagrant status | grep poweron
 #+end_src
 
 #+name: start_vagrant
@@ -82,7 +82,7 @@ sudo apt-get update
 sudo apt-get install build-essentials emacs24-nox org-mode -y
 #+end_src
 
-**** Vagrantfile :: Docker provider
+**** COMMENT Vagrantfile :: Docker provider
 
 #+begin_src ruby :tangle docker/Vagrantfile :mkdirp true
 Vagrant.configure("2") do |config|
@@ -95,7 +95,7 @@ end
 #+begin_src conf :tangle docker/Dockerfile
 FROM ubuntu
 RUN  apt-get -y update
-RUN  apt-get -y install emacs24-nox org-mode
+RUN  apt-get -y install emacs24-nox
 #+end_src
 
 #+name: vagrant-docker-provider
