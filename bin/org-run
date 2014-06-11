@@ -8,7 +8,7 @@ doc = <<OPTIONS
 org-run: Run code blocks in parallel by default.
 
 Usage:
-  org-run <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--runmode=<runmode>] [--name=<block_name>]
+  org-run <org_file> [--showfiles] [--log=<logfile>] [--root-dir=<root_dir>] [--runmode=<runmode>] [--name=<block_name>] [--dir=<dir>]
 
 Options:
 

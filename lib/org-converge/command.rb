@@ -11,6 +11,7 @@ module OrgConverge
       @options   = options
       @dotorg    = options['<org_file>']
       @root_dir  = options['--root-dir']
+      @dir       = options['--dir']
       @run_dir   = if @root_dir
                      File.expand_path(File.join(@root_dir, 'run'))
                    else
@@ -368,6 +369,7 @@ module OrgConverge
         end
       end
 
+      script[:header][:dir] = @dir if @dir
       if script[:header][:procs]
         procs = script[:header][:procs].to_i
         1.upto(procs) do |i|
