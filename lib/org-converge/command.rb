@@ -24,7 +24,7 @@ module OrgConverge
                      else
                        File.expand_path(results_dirname)
                      end
-      @ob    = Orgmode::Parser.new(File.read(dotorg)).babelize
+      @ob    = Orgmode::Parser.new(File.read(dotorg), { :allow_include_files => true }).babelize
       @babel = nil
       @logger  = Logger.new(options['--log'] || STDOUT)
       logger.formatter = proc do |severity, datetime, progname, msg| 
