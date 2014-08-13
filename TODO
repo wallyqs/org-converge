@@ -36,6 +36,10 @@ Some of these need further work on the Org Ruby parser.
   Also part of the idempotency checks.
 - [ ] =:env= and =#+envfile:=
 
+* [1/1] 0.0.17
+
+- [X] Allow to include files by default
+
 * [1/1] 0.0.16
 
 - [X] Remove timeout feature.
