@@ -1,0 +1,27 @@
+#+TITLE: Releasing a new version of the Gem
+#+macro: gem-version 0.0.17
+
+Bump the version up:
+
+#+begin_src ruby :tangle lib/org-converge/version.rb
+module OrgConverge
+  VERSION = "0.0.17"
+end
+#+end_src
+
+#+name: prepare-gem-version-update
+#+BEGIN_SRC sh
+
+# Do this when macros work:
+# export GEM_VERSION="{{ gem-version }}"
+
+export GEM_VERSION=0.0.17
+git checkout -b release-$GEM_VERSION
+git add lib/org-converge/version.rb
+git commit -m "Bump version of the gem to $GEM_VERSION"
+git checkout master
+git merge --no-ff release-$GEM_VERSION
+git tag -a $GEM_VERSION -m $GEM_VERSION
+
+gem build org-converge.gemspec
+#+END_SRC
